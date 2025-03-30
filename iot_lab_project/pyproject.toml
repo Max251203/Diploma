@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "iot-lab-project"
+version = "0.1.0"
+description = "Обучающее ПО для лабораторного практикума по IoT"
+authors = ["MaksMurashko <maksmd251203@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "*", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+homeassistant_api = { git = "https://github.com/GrandMoff100/HomeassistantAPI.git" }
+python-dotenv = "^1.0.0"
+aiohttp_client_cache = "^0.12.4"
+requests = "^2.31.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
