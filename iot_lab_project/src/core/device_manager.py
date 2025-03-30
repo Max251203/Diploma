@@ -53,6 +53,15 @@ class DeviceManager:
         model = (device.get("model") or "").lower()
         manufacturer = (device.get("manufacturer") or "").lower()
 
+        full_name = f"{manufacturer} {model}".lower()
+        
+        known_actuators = [
+            "xiaomi mi air", "xiaomi air purifier", "mi air purifier"
+        ]
+        for keyword in known_actuators:
+            if keyword in full_name or keyword in name:
+                return "Исполнительные устройства"
+
         if any(s in name for s in [
             "sun", "home assistant", "hacs", "zigbee2mqtt", "mosquitto", "terminal", "ssh",
             "file editor", "supervisor", "host", "core", "update", "tailscale"
@@ -64,7 +73,7 @@ class DeviceManager:
             return "Системные"
 
         if any(e.get("entity_id", "").startswith(("light.", "switch.", "fan.", "cover."))
-               for e in entities):
+            for e in entities):
             return "Исполнительные устройства"
 
         if any(

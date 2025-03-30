@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>IoT Лаборатория</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QFrame" name="connectionStatusFrame">
+      <property name="frameShape">
+       <enum>QFrame::Shape::StyledPanel</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayoutStatus">
+       <item>
+        <widget class="QLabel" name="labelConnectionStatus">
+         <property name="styleSheet">
+          <string notr="true">color: red; font-weight: bold;</string>
+         </property>
+         <property name="text">
+          <string>Статус: не подключено</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelConnectionUrl">
+         <property name="styleSheet">
+          <string notr="true">font-size: 10pt; color: gray;</string>
+         </property>
+         <property name="text">
+          <string>URL: неизвестен</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="buttonPanel">
+      <property name="frameShape">
+       <enum>QFrame::Shape::StyledPanel</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayoutButtons">
+       <item>
+        <widget class="QPushButton" name="btnGetDevices">
+         <property name="text">
+          <string>Получить устройства</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../../resources/resources_rc.qrc">
+           <normaloff>:/icon/icons/get_devices.png</normaloff>:/icon/icons/get_devices.png</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabWidgetMain">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabDevices">
+       <attribute name="icon">
+        <iconset>
+         <normalon>:/icon/icons/devices.png</normalon>
+        </iconset>
+       </attribute>
+       <attribute name="title">
+        <string>Устройства</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutDevices">
+        <item>
+         <widget class="QScrollArea" name="scrollAreaDevices">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>856</width>
+             <height>396</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="layoutDeviceList"/>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabLogs">
+       <attribute name="icon">
+        <iconset>
+         <normalon>:/icon/icons/log.png</normalon>
+        </iconset>
+       </attribute>
+       <attribute name="title">
+        <string>Журнал событий</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayoutLogs">
+        <item>
+         <widget class="QTextEdit" name="textEditLogs">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="placeholderText">
+           <string>Здесь отображаются логи работы программы...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources>
+  <include location="../../resources/resources_rc.qrc"/>
+ </resources>
+ <connections/>
+</ui>

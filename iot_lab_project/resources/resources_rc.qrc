@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>icons/devices.png</file>
+    <file>icons/get_devices.png</file>
+    <file>icons/log.png</file>
+  </qresource>
+</RCC>

@@ -1,66 +1,94 @@
 import os
+from sys import argv, exit
 from dotenv import load_dotenv
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel
+from ui.main_ui import Ui_MainWindow
 from core.ws_client import HomeAssistantWSClient
 from core.device_manager import DeviceManager
 from core.entity_manager import EntityManager
 
-def main():
-    load_dotenv()
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
-    ws_url = os.getenv("HA_WS_URL")
-    token = os.getenv("HA_TOKEN")
+        self.setGeometry(100, 100, 900, 600)
+        self.setWindowTitle("IoT Лаборатория")
 
-    if not ws_url or not token:
-        print("❌ Не заданы переменные окружения HA_WS_URL и HA_TOKEN")
-        return
+        load_dotenv()
+        self.ws_url = os.getenv("HA_WS_URL")
+        self.token = os.getenv("HA_TOKEN")
 
-    ws_client = HomeAssistantWSClient(ws_url, token)
-    entity_manager = EntityManager(ws_client)
-    device_manager = DeviceManager(ws_client, entity_manager)
+        self.ws_client = None
+        self.entity_manager = None
+        self.device_manager = None
 
-    categorized = device_manager.get_categorized_devices()
+        self.ui.btnGetDevices.clicked.connect(self.load_devices)
+        self.connect_to_ha()
 
+    def connect_to_ha(self):
+        if not self.ws_url or not self.token:
+            self.ui.labelConnectionStatus.setText("❌ Нет подключения")
+            self.ui.labelConnectionStatus.setStyleSheet("color: red; font-weight: bold;")
+            self.ui.labelConnectionUrl.setText("URL: неизвестен")
+            self.log("❌ Не заданы переменные HA_WS_URL и HA_TOKEN в .env")
+            return
+        try:
+            self.ws_client = HomeAssistantWSClient(self.ws_url, self.token)
+            self.entity_manager = EntityManager(self.ws_client)
+            self.device_manager = DeviceManager(self.ws_client, self.entity_manager)
 
-    # # 👉 Укажи entity_id твоей лампы (можно взять из вывода DeviceManager)
-    # lamp_entity_id = "light.midesklamp1s_963a"
+            self.device_manager.get_physical_devices()
 
-    # # === Получение текущего состояния лампы ===
-    # state = entity_manager.get_state(lamp_entity_id)
-    # print(f"💡 Состояние лампы '{lamp_entity_id}': {state}")
+            self.ui.labelConnectionStatus.setText("✅ Подключено к Home Assistant")
+            self.ui.labelConnectionStatus.setStyleSheet("color: green; font-weight: bold;")
+            self.ui.labelConnectionUrl.setText(f"URL: {self.ws_url}")
+            self.log(f"✅ Подключено к {self.ws_url}")
+        except Exception as e:
+            self.ui.labelConnectionStatus.setText("❌ Ошибка подключения")
+            self.ui.labelConnectionStatus.setStyleSheet("color: red; font-weight: bold;")
+            self.ui.labelConnectionUrl.setText("URL: неизвестен")
+            self.log(f"❌ Ошибка подключения: {e}")
 
-    # # === Включение лампы ===
-    # print("\n🔛 Включаем лампу...")
-    # if entity_manager.turn_on(lamp_entity_id):
-    #     print("✅ Лампа включена")
-    # else:
-    #     print("❌ Не удалось включить лампу")
+    def load_devices(self):
+        if not self.device_manager:
+            self.log("❌ Устройства не загружены — нет подключения")
+            return
 
-    # # === Выключение лампы ===
-    # print("\n🔌 Выключаем лампу...")
-    # if entity_manager.turn_off(lamp_entity_id):
-    #     print("✅ Лампа выключена")
-    # else:
-    #     print("❌ Не удалось выключить лампу")
+        categorized = self.device_manager.get_categorized_devices()
+        layout = self.ui.layoutDeviceList
 
-    # # === Переключение (toggle) ===
-    # print("\n🔁 Переключаем (toggle) лампу...")
-    # if entity_manager.toggle(lamp_entity_id):
-    #     print("✅ Состояние лампы переключено")
-    # else:
-    #     print("❌ Не удалось переключить лампу")
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
+        for category, devices in categorized.items():
+            if not devices:
+                continue
 
+            label = QLabel(f"<b>{category} ({len(devices)})</b>")
+            layout.addWidget(label)
 
-    print("\n📦 Устройства по категориям:\n")
-    for category, devices in categorized.items():
-        if not devices:
-            continue
-        print(f"📂 {category} ({len(devices)})")
-        for device in devices:
-            print(f"  🧩 {device['name']} | {device['manufacturer']} {device['model']}")
-            # сд
-        print("-" * 60)
+            for device in devices:
+                text = f"<b>{device['name']}</b> | {device['manufacturer']} {device['model']}"
+                dev_label = QLabel(text)
+                dev_label.setStyleSheet("margin-left: 10px;")
+                layout.addWidget(dev_label)
 
+        self.log("✅ Устройства загружены")
+
+    def log(self, message: str):
+        old_text = self.ui.textEditLogs.toPlainText()
+        new_text = f"{old_text}\n{message}" if old_text else message
+        self.ui.textEditLogs.setPlainText(new_text)
+        self.ui.textEditLogs.verticalScrollBar().setValue(
+            self.ui.textEditLogs.verticalScrollBar().maximum()
+        )
 
 if __name__ == "__main__":
-    main()
+    app = QApplication(argv)
+    win = MainWindow()
+    win.show()
+    exit(app.exec())
