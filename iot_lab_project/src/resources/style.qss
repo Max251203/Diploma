@@ -1,0 +1,302 @@
+/* === ГЛОБАЛЬНЫЕ НАСТРОЙКИ === */
+* {
+    color: #c6e2ff;
+    font-family: "MS Shell Dlg 2";
+}
+
+/* === ОБЩИЙ ФОН === */
+QWidget#centralwidget, QDialog {
+    background-color: qlineargradient(
+        spread:pad, x1:1, y1:1, x2:0, y2:0,
+        stop:0 rgba(81, 0, 135, 255),
+        stop:0.427 rgba(41, 61, 132, 235),
+        stop:1 rgba(155, 79, 165, 255)
+    );
+}
+
+/* === РАМКИ === */
+#inputFrame, #buttonFrame, QFrame {
+    border: 2px outset rgb(0, 191, 255);
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* === ПАНЕЛЬ ПОДКЛЮЧЕНИЯ (внутренняя) === */
+#connectionControlFrame {
+    background-color: transparent;
+    border: none;
+}
+
+/* === ПАНЕЛЬ КНОПОК (подключение и управление) === */
+#buttonPanel {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 2px outset rgb(0, 191, 255);
+    border-radius: 10px;
+}
+
+/* === QLabel === */
+QLabel {
+    border: none;
+    padding: 2px;
+    min-height: 28px;
+    background-color: transparent;
+    font-size: 10pt;
+}
+
+/* === QLabel статуса (точечно) === */
+#labelConnectionInfo {
+    border: none;
+    background: transparent;
+    font-weight: bold;
+}
+
+/* === QComboBox === */
+QComboBox {
+    padding: 2px;
+    min-height: 30px;
+    min-width: 150px;
+    border: 1px solid rgb(0, 191, 255);
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 0px;
+}
+
+QComboBox::drop-down {
+    border: 0px;
+    border-radius: 0px;
+}
+
+QComboBox::down-arrow {
+    width: 12px;
+    height: 12px;
+    border: 1px solid rgb(0, 191, 255);
+    margin-right: 15px;
+    border-radius: 0px;
+}
+
+QComboBox QListView,
+QComboBox::view {
+    font-size: 12px;
+    border: 1px solid rgb(0, 191, 255);
+    padding: 5px;
+    background-color: rgb(75, 0, 130);
+    outline: none;
+    border-radius: 0px;
+}
+
+/* === QLineEdit === */
+QLineEdit {
+    min-height: 30px;
+    padding: 3px;
+    border: 1px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    font-size: 10pt;
+    qproperty-alignment: AlignCenter;
+}
+
+QLineEdit:focus {
+    border: 2px solid #c6e2ff;
+}
+
+/* === Индикатор шага (QLabel) === */
+#step_box {
+    min-width: 50px;
+    max-width: 100px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    qproperty-alignment: AlignCenter;
+}
+
+/* === QPushButton === */
+QPushButton {
+    min-height: 28px;
+    padding: 3px;
+    border: 2px outset rgb(0, 191, 255);
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    font-size: 11pt;
+    icon-size: 24px 24px;
+}
+
+QPushButton:hover {
+    background-color: qlineargradient(
+        spread:reflect, x1:0, y1:0, x2:1, y2:0.994,
+        stop:0 rgba(255, 0, 223, 44),
+        stop:1 rgba(0, 0, 255, 49)
+    );
+}
+
+QPushButton:pressed {
+    background-color: qlineargradient(
+        spread:reflect, x1:0, y1:0, x2:1, y2:0.994,
+        stop:0 rgba(255, 0, 223, 44),
+        stop:1 rgba(0, 0, 255, 49)
+    );
+}
+
+/* === QCheckBox === */
+#ansysCheck {
+    min-height: 30px;
+    padding: 2px;
+    spacing: 8px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    font-size: 11pt;
+}
+
+#ansysCheck::indicator {
+    height: 22px;
+    width: 22px;
+}
+
+/* === QSlider === */
+QSlider {
+    min-width: 150px;
+}
+
+QSlider::groove:horizontal {
+    height: 1px;
+    border: none;
+}
+
+QSlider::handle:horizontal {
+    background: rgb(0, 0, 0);
+    width: 20px;
+    margin: -10px -1px;
+    border: 1px solid rgb(0, 255, 255);
+    border-radius: 10px;
+}
+
+QSlider::handle:horizontal:hover {
+    background: rgb(0, 255, 255);
+}
+
+QSlider::add-page:horizontal {
+    background-color: rgb(70, 130, 180);
+}
+
+QSlider::sub-page:horizontal {
+    background: rgb(0, 255, 255);
+}
+
+/* === QListWidget === */
+QListWidget {
+    padding: 5px;
+    border: 2px outset rgb(0, 191, 255);
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+QListView::item {
+    height: 50px;
+    font-size: 12pt;
+}
+
+QListView::item:hover {
+    background: rgb(72, 61, 139);
+}
+
+QListView::item:selected {
+    border: 1px solid rgb(0, 191, 255);
+    background: rgb(72, 61, 139);
+}
+
+/* === QScrollBar (вертикальный) === */
+QScrollBar:vertical {
+    border: 2px solid rgb(0, 191, 255);
+    background: transparent;
+    width: 10px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: rgb(128, 0, 128);
+    min-height: 30px;
+    border-radius: 7px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: rgb(255, 0, 127);
+}
+
+QScrollBar::handle:vertical:pressed {
+    background-color: rgb(185, 0, 92);
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+/* === QTabWidget и вкладки === */
+QTabWidget {
+    min-height: 400px;
+}
+
+QTabWidget::pane {
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+}
+
+QTabWidget::tab-bar {
+    left: 20px;
+}
+
+QTabBar::tab {
+    min-height: 40px;
+    min-width: 220px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgb(0, 191, 255);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    padding: 4px;
+    font: 11pt "Bahnschrift Condensed";
+    qproperty-iconSize: 24px 24px;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 5px;
+}
+
+QTabWidget QWidget {
+    border-width: 0px;
+}
+
+/* === QTextEdit (логи) === */
+QTextEdit {
+    background-color: rgba(0, 0, 0, 0.4);
+    font: 10pt "Consolas";
+    border: 1px solid rgb(0, 191, 255);
+    border-radius: 5px;
+    padding: 5px;
+}
+
+/* === QMessageBox === */
+QMessageBox {
+    border: 2px solid rgb(0, 191, 255);
+    background-color: qlineargradient(
+        spread:pad, x1:1, y1:1, x2:0, y2:0,
+        stop:0 rgba(81, 0, 135, 255),
+        stop:0.427447 rgba(41, 61, 132, 235),
+        stop:1 rgba(155, 79, 165, 255)
+    );
+}
+
+/* === Метки статуса (загрузка, успех, ошибка) === */
+QLabel[loading="true"] {
+    font-weight: bold;
+    color: orange;
+}
+
+QLabel[status="success"] {
+    font-weight: bold;
+    color: #00ff88;
+}
+
+QLabel[status="error"] {
+    font-weight: bold;
+    color: red;
+}

@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 
 # Путь к папке resources (один уровень выше src)
 BASE_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "resources")
+    os.path.join(os.path.dirname(__file__), "..", "resources")
 )
 DB_PATH = os.path.join(BASE_DIR, "ha_connections.db")
 

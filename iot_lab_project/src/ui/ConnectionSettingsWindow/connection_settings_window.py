@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QDialog, QMessageBox
-from ui.connection_settings_ui import Ui_ConnectionSettingsWindow
+from ui.ConnectionSettingsWindow.connection_settings_ui import Ui_ConnectionSettingsWindow
 from core.db_manager import HAConnectionDB
-from config import ALLOW_TOKEN_EDIT
 
 
 class ConnectionSettingsWindow(QDialog, Ui_ConnectionSettingsWindow):
@@ -12,8 +11,6 @@ class ConnectionSettingsWindow(QDialog, Ui_ConnectionSettingsWindow):
         self.db = HAConnectionDB()
         self.selected_connection_id = None
         self.selected_connection_data = None
-
-        self.tokenEdit.setDisabled(not ALLOW_TOKEN_EDIT)
 
         # Подключаем сигналы
         self.connectionsList.itemClicked.connect(self.on_connection_selected)

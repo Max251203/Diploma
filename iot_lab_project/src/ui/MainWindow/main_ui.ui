@@ -15,82 +15,62 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
-
-    <!-- Верхняя панель подключения -->
     <item>
-     <widget class="QFrame" name="connectionStatusFrame">
-      <property name="frameShape">
-       <enum>StyledPanel</enum>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayoutStatus">
-
-       <!-- Статус подключения -->
-       <item>
-        <widget class="QLabel" name="labelConnectionStatus">
-         <property name="styleSheet">
-          <string notr="true">color: red; font-weight: bold;</string>
-         </property>
-         <property name="text">
-          <string>Статус: не подключено</string>
-         </property>
-        </widget>
-       </item>
-
-       <!-- URL подключения -->
-       <item>
-        <widget class="QLabel" name="labelConnectionUrl">
-         <property name="styleSheet">
-          <string notr="true">font-size: 10pt; color: gray;</string>
-         </property>
-         <property name="text">
-          <string>URL: неизвестен</string>
-         </property>
-        </widget>
-       </item>
-
-       <!-- Панель выбора и управления подключениями -->
-       <item>
-        <widget class="QFrame" name="connectionControlFrame">
-         <property name="frameShape">
-          <enum>StyledPanel</enum>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayoutConnection">
-
-          <item>
-           <widget class="QComboBox" name="comboConnections"/>
-          </item>
-
-          <item>
-           <widget class="QPushButton" name="btnConnect">
-            <property name="text">
-             <string>Подключиться</string>
-            </property>
-           </widget>
-          </item>
-
-          <item>
-           <widget class="QPushButton" name="btnConnectSettings">
-            <property name="text">
-             <string>Настроить подключения</string>
-            </property>
-           </widget>
-          </item>
-
-         </layout>
-        </widget>
-       </item>
-
-      </layout>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayoutTopInfo">
+      <item>
+       <widget class="QLabel" name="labelConnectionInfo">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">padding-right: 5px;</string>
+        </property>
+        <property name="text">
+         <string>❌ Не подключено</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboConnections">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnConnectSettings">
+        <property name="toolTip">
+         <string>Открыть список подключений</string>
+        </property>
+        <property name="text">
+         <string>Варианты подключения</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-
-    <!-- Панель кнопок -->
     <item>
      <widget class="QFrame" name="buttonPanel">
       <property name="frameShape">
-       <enum>StyledPanel</enum>
+       <enum>QFrame::Shape::StyledPanel</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayoutButtons">
+       <item>
+        <widget class="QPushButton" name="btnConnect">
+         <property name="text">
+          <string>Подключиться</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QPushButton" name="btnGetDevices">
          <property name="text">
@@ -105,12 +85,16 @@
       </layout>
      </widget>
     </item>
-
-    <!-- Панель страниц -->
     <item>
      <widget class="QTabWidget" name="tabWidgetMain">
       <property name="currentIndex">
        <number>0</number>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>28</width>
+        <height>28</height>
+       </size>
       </property>
       <widget class="QWidget" name="tabDevices">
        <attribute name="icon">
@@ -127,13 +111,16 @@
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+          </property>
           <widget class="QWidget" name="scrollAreaWidgetContents">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
              <width>856</width>
-             <height>396</height>
+             <height>439</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="layoutDeviceList"/>
@@ -166,10 +153,8 @@
       </widget>
      </widget>
     </item>
-
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources>
   <include location="../../resources/resources_rc.qrc"/>
