@@ -1,19 +1,18 @@
-import os
 import requests
 from typing import List, Dict, Any
 from core.ws_client import HomeAssistantWSClient
 
 
 class EntityManager:
-    def __init__(self, ws_client: HomeAssistantWSClient):
-        self.ws = ws_client
-        self.api_url = os.getenv("HA_API_URL")
-        self.token = os.getenv("HA_TOKEN")
-        self.headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
-        }
-        self.entities = self._load_entities()
+    def __init__(self, ws_client: HomeAssistantWSClient, api_url: str, token: str):
+            self.ws = ws_client
+            self.api_url = api_url
+            self.token = token
+            self.headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json"
+            }
+            self.entities = self._load_entities()
 
     def _load_entities(self) -> List[Dict[str, Any]]:
         return self.ws.send_command("config/entity_registry/list")

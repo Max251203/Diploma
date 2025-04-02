@@ -15,12 +15,16 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+
+    <!-- Верхняя панель подключения -->
     <item>
      <widget class="QFrame" name="connectionStatusFrame">
       <property name="frameShape">
-       <enum>QFrame::Shape::StyledPanel</enum>
+       <enum>StyledPanel</enum>
       </property>
       <layout class="QVBoxLayout" name="verticalLayoutStatus">
+
+       <!-- Статус подключения -->
        <item>
         <widget class="QLabel" name="labelConnectionStatus">
          <property name="styleSheet">
@@ -31,6 +35,8 @@
          </property>
         </widget>
        </item>
+
+       <!-- URL подключения -->
        <item>
         <widget class="QLabel" name="labelConnectionUrl">
          <property name="styleSheet">
@@ -41,13 +47,48 @@
          </property>
         </widget>
        </item>
+
+       <!-- Панель выбора и управления подключениями -->
+       <item>
+        <widget class="QFrame" name="connectionControlFrame">
+         <property name="frameShape">
+          <enum>StyledPanel</enum>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayoutConnection">
+
+          <item>
+           <widget class="QComboBox" name="comboConnections"/>
+          </item>
+
+          <item>
+           <widget class="QPushButton" name="btnConnect">
+            <property name="text">
+             <string>Подключиться</string>
+            </property>
+           </widget>
+          </item>
+
+          <item>
+           <widget class="QPushButton" name="btnConnectSettings">
+            <property name="text">
+             <string>Настроить подключения</string>
+            </property>
+           </widget>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
       </layout>
      </widget>
     </item>
+
+    <!-- Панель кнопок -->
     <item>
      <widget class="QFrame" name="buttonPanel">
       <property name="frameShape">
-       <enum>QFrame::Shape::StyledPanel</enum>
+       <enum>StyledPanel</enum>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayoutButtons">
        <item>
@@ -64,6 +105,8 @@
       </layout>
      </widget>
     </item>
+
+    <!-- Панель страниц -->
     <item>
      <widget class="QTabWidget" name="tabWidgetMain">
       <property name="currentIndex">
@@ -123,6 +166,7 @@
       </widget>
      </widget>
     </item>
+
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
