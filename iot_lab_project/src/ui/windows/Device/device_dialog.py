@@ -68,7 +68,16 @@ class DeviceDialog(QDialog):
         layout.addWidget(info_frame)
         
         # Список сущностей
-        layout.addWidget(QLabel("<h3>Сущности и их состояния:</h3>"))
+        entities_title = QLabel("<h3>Сущности и их состояния:</h3>")
+        entities_title.setStyleSheet("color: #c6e2ff; margin-top: 10px;")
+        layout.addWidget(entities_title)
+        
+        # Создаем контейнер для сущностей с рамкой
+        entities_container = QFrame()
+        entities_container.setObjectName("entitiesContainer")
+        entities_container.setFrameShape(QFrame.StyledPanel)
+        entities_container.setFrameShadow(QFrame.Raised)
+        entities_layout = QVBoxLayout(entities_container)
         
         # Создаем область прокрутки с прозрачным фоном
         entities_scroll = QScrollArea()
@@ -78,21 +87,30 @@ class DeviceDialog(QDialog):
         # Контейнер для сущностей
         entities_widget = QWidget()
         entities_widget.setStyleSheet("background: transparent;")
-        entities_layout = QVBoxLayout(entities_widget)
+        entities_content_layout = QVBoxLayout(entities_widget)
         
         # Создаем виджеты для каждой сущности
         for entity in self.device['entities']:
             entity_widget = EntityWidget(entity)
             entity_widget.control_requested.connect(self._handle_control_request)
-            entities_layout.addWidget(entity_widget)
+            entities_content_layout.addWidget(entity_widget)
             
             # Сохраняем ссылку на виджет
             entity_id = entity.get("entity_id")
             if entity_id:
                 self.entity_widgets[entity_id] = entity_widget
         
+        # Добавляем растягивающийся элемент в конец
+        entities_content_layout.addStretch()
+        
+        # Устанавливаем виджет в область прокрутки
         entities_scroll.setWidget(entities_widget)
-        layout.addWidget(entities_scroll)
+        
+        # Добавляем область прокрутки в контейнер
+        entities_layout.addWidget(entities_scroll)
+        
+        # Добавляем контейнер в основной layout
+        layout.addWidget(entities_container)
     
     def load_states(self):
         """Загружает состояния сущностей в отдельном потоке"""

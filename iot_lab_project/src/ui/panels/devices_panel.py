@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QListWidget, 
-                             QListWidgetItem, QScrollArea)
+                             QListWidgetItem, QScrollArea, QLabel)
 from PySide6.QtCore import Signal, Qt
 from ui.widgets.flow_layout import FlowLayout
 from ui.widgets.device_card import DeviceCard
@@ -33,25 +33,28 @@ class DevicesPanel(QWidget):
         self.category_list.currentRowChanged.connect(self._on_category_changed)
         layout.addWidget(self.category_list)
         
-        # Контейнер устройств
-        self.device_scroll = QScrollArea()
-        self.device_scroll.setObjectName("deviceScroll")
-        self.device_scroll.setWidgetResizable(True)
-        # Важно: полосы прокрутки внутри области
-        self.device_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.device_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        
+        # Создаем контейнер для устройств
         self.device_container = QWidget()
         self.device_container.setObjectName("deviceContainer")
         
+        # Создаем layout для контейнера
         self.device_layout = QVBoxLayout(self.device_container)
         self.device_layout.setContentsMargins(10, 10, 10, 10)
         
+        # Создаем flow layout для карточек устройств
         self.flow_layout = FlowLayout()
         self.device_layout.addLayout(self.flow_layout)
         self.device_layout.addStretch()
         
+        # Создаем область прокрутки
+        self.device_scroll = QScrollArea()
+        self.device_scroll.setObjectName("deviceScroll")
+        self.device_scroll.setWidgetResizable(True)
+        
+        # Устанавливаем контейнер в область прокрутки
         self.device_scroll.setWidget(self.device_container)
+        
+        # Добавляем область прокрутки в основной layout
         layout.addWidget(self.device_scroll)
         
         # Выбираем первую категорию
@@ -83,6 +86,18 @@ class DevicesPanel(QWidget):
             for device in self.devices_by_category[category]:
                 self._add_device_card(device)
     
+    def clear_devices(self):
+        """Очищает все устройства"""
+        self._clear_device_cards()
+
+    def show_loading_indicator(self, message):
+        """Показывает индикатор загрузки"""
+        loading_label = QLabel(message)
+        loading_label.setObjectName("loadingLabel")
+        loading_label.setAlignment(Qt.AlignCenter)
+        loading_label.setStyleSheet("font-weight: bold; color: orange; font-size: 14px;")
+        self.flow_layout.addWidget(loading_label)
+
     def _clear_device_cards(self):
         """Очищает все карточки устройств"""
         while self.flow_layout.count():

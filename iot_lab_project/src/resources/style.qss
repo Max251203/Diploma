@@ -269,22 +269,38 @@ QMessageBox {
 /* === СТИЛИ ДЛЯ КОНТЕЙНЕРА УСТРОЙСТВ === */
 #deviceContainer {
     background-color: rgba(0, 0, 0, 0.2);
-    border: 2px solid rgb(0, 191, 255);
-    border-radius: 10px;
-    margin: 0;
+    border: none;
 }
 
 /* === СТИЛИ ДЛЯ ОБЛАСТИ ПРОКРУТКИ === */
 #deviceScroll {
-    border: none;
-    background: transparent;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
 }
 
 #deviceScroll QScrollBar:vertical {
     border: 1px solid rgb(0, 191, 255);
     background: transparent;
-    width: 10px;
-    margin: 0;
+    width: 8px;
+    margin: 10px 5px 10px 0px; /* Отступы сверху, справа, снизу, слева */
+    border-radius: 4px;
+}
+
+#deviceScroll QScrollBar::handle:vertical {
+    background-color: rgb(128, 0, 128);
+    min-height: 30px;
+    border-radius: 4px;
+}
+
+#deviceScroll QScrollBar::add-line:vertical,
+#deviceScroll QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+#deviceScroll QScrollBar::add-page:vertical,
+#deviceScroll QScrollBar::sub-page:vertical {
+    background: none;
 }
 
 /* === СТИЛИ ДЛЯ КАРТОЧКИ УСТРОЙСТВА === */
@@ -309,16 +325,51 @@ QMessageBox {
     padding: 5px;
 }
 
-#entityItemFrame {
+/* === СТИЛИ ДЛЯ КОНТЕЙНЕРА СУЩНОСТЕЙ === */
+#entitiesContainer {
     background-color: rgba(0, 0, 0, 0.2);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    margin-top: 5px;
+}
+
+/* === СТИЛИ ДЛЯ СУЩНОСТЕЙ === */
+#entityItemFrame {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    margin: 5px;
+    padding: 8px;
+}
+
+#entityItemFrame:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgb(0, 255, 255);
+}
+
+#entityControlFrame {
+    background-color: transparent;
+    border: none;
+}
+
+#entityControlFrame QPushButton {
+    min-height: 25px;
+    font-size: 10px;
+    padding: 2px 5px;
     border: 1px solid rgb(0, 191, 255);
-    border-radius: 5px;
-    margin: 2px;
-    padding: 5px;
 }
 
 /* === ПРОЗРАЧНЫЙ ФОН ДЛЯ ОБЛАСТЕЙ ПРОКРУТКИ === */
 QScrollArea, QScrollArea > QWidget > QWidget {
     background: transparent;
+    border: none;
+}
+
+/* === СТИЛИ ДЛЯ ИНДИКАТОРА ЗАГРУЗКИ === */
+#loadingLabel {
+    font-weight: bold;
+    color: orange;
+    font-size: 14px;
+    background-color: transparent;
     border: none;
 }

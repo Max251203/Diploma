@@ -1,9 +1,9 @@
-from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton, QHBoxLayout
 from PySide6.QtCore import Qt, Signal
 
 class EntityWidget(QFrame):
     """Виджет для отображения сущности"""
-    control_requested = Signal(str, str)  # entity_id, action
+    control_requested = Signal(str, str)  
     
     def __init__(self, entity, parent=None):
         super().__init__(parent)
@@ -13,6 +13,7 @@ class EntityWidget(QFrame):
         
         self.setObjectName("entityItemFrame")
         self.setFrameShape(QFrame.StyledPanel)
+        self.setFrameShadow(QFrame.Raised)
         self.setup_ui()
     
     def setup_ui(self):
@@ -20,12 +21,18 @@ class EntityWidget(QFrame):
         
         # Название и ID
         entity_name = self.entity.get("original_name", self.entity.get("name", "—"))
-        layout.addWidget(QLabel(f"<b>{entity_name}</b>"), 0, 0, 1, 2)
-        layout.addWidget(QLabel(f"ID: {self.entity_id}"), 1, 0, 1, 2)
+        name_label = QLabel(f"<b>{entity_name}</b>")
+        name_label.setStyleSheet("font-size: 12px; color: #c6e2ff;")
+        layout.addWidget(name_label, 0, 0, 1, 2)
+        
+        id_label = QLabel(f"ID: {self.entity_id}")
+        id_label.setStyleSheet("font-size: 10px; color: #a0c0e0;")
+        layout.addWidget(id_label, 1, 0, 1, 2)
         
         # Метка состояния
         self.state_label = QLabel("Состояние: загрузка...")
         self.state_label.setObjectName(f"state_{self.entity_id}")
+        self.state_label.setStyleSheet("font-size: 11px; color: #ffcc00;")
         layout.addWidget(self.state_label, 2, 0, 1, 2)
         
         # Элементы управления
@@ -35,24 +42,42 @@ class EntityWidget(QFrame):
             self._add_cover_controls(layout)
     
     def _add_toggle_controls(self, layout):
+        control_frame = QFrame()
+        control_frame.setObjectName("entityControlFrame")
+        control_layout = QHBoxLayout(control_frame)
+        control_layout.setContentsMargins(0, 5, 0, 0)
+        
         btn_on = QPushButton("Включить")
+        btn_on.setStyleSheet("min-height: 25px; font-size: 10px;")
         btn_off = QPushButton("Выключить")
+        btn_off.setStyleSheet("min-height: 25px; font-size: 10px;")
         
         btn_on.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "turn_on"))
         btn_off.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "turn_off"))
         
-        layout.addWidget(btn_on, 3, 0)
-        layout.addWidget(btn_off, 3, 1)
+        control_layout.addWidget(btn_on)
+        control_layout.addWidget(btn_off)
+        
+        layout.addWidget(control_frame, 3, 0, 1, 2)
     
     def _add_cover_controls(self, layout):
+        control_frame = QFrame()
+        control_frame.setObjectName("entityControlFrame")
+        control_layout = QHBoxLayout(control_frame)
+        control_layout.setContentsMargins(0, 5, 0, 0)
+        
         btn_open = QPushButton("Открыть")
+        btn_open.setStyleSheet("min-height: 25px; font-size: 10px;")
         btn_close = QPushButton("Закрыть")
+        btn_close.setStyleSheet("min-height: 25px; font-size: 10px;")
         
         btn_open.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "open_cover"))
         btn_close.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "close_cover"))
         
-        layout.addWidget(btn_open, 3, 0)
-        layout.addWidget(btn_close, 3, 1)
+        control_layout.addWidget(btn_open)
+        control_layout.addWidget(btn_close)
+        
+        layout.addWidget(control_frame, 3, 0, 1, 2)
     
     def update_state(self, state_data):
         """Обновляет отображение состояния"""

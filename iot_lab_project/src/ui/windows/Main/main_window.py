@@ -1,13 +1,15 @@
-from PySide6.QtWidgets import (QMainWindow, QLabel, QMessageBox, 
-                             QDialog, QVBoxLayout, QComboBox)
+from PySide6.QtWidgets import QMainWindow, QLabel, QMessageBox, QDialog
 from PySide6.QtCore import QFile, QTextStream
-from ui.windows.Main.main_ui import Ui_MainWindow
+from ui.windows.Main.main_ui import Ui_MainWindow 
 from ui.windows.Connection.connection_dialog import ConnectionDialog
 from ui.windows.Device.device_dialog import DeviceDialog
 from ui.panels.devices_panel import DevicesPanel
 from core.db.connection_db import HAConnectionDB
 from core.workers.connection_worker import ConnectionWorker
 from core.workers.device_loader import DeviceLoader
+from utils.logger import Logger
+
+# Остальной код класса MainWindow...
 
 class MainWindow(QMainWindow):
     """Главное окно приложения"""
@@ -19,6 +21,9 @@ class MainWindow(QMainWindow):
         
         self.setGeometry(100, 100, 900, 600)
         self.setWindowTitle("IoT Лаборатория")
+        
+        # Инициализация логгера
+        self.logger = Logger(console_output=False)
         
         # Инициализация переменных
         self.ws_client = None
@@ -47,6 +52,7 @@ class MainWindow(QMainWindow):
     def setup_devices_panel(self):
         """Настройка панели устройств"""
         layout = self.ui.layoutDeviceList
+        layout.setContentsMargins(0, 0, 0, 0)
         
         # Удаляем текущее содержимое
         while layout.count():
@@ -94,7 +100,10 @@ class MainWindow(QMainWindow):
         
         self.selected_connection = connection_data
         self.ui.labelConnectionInfo.setText("🔄 Подключение...")
-        self.log("🔄 Подключение...")
+        
+        # Логируем начало подключения
+        self.logger.info("Подключение к Home Assistant...")
+        self._update_logs()
         
         # Запускаем подключение в отдельном потоке
         self.connection_worker = ConnectionWorker(
@@ -112,12 +121,14 @@ class MainWindow(QMainWindow):
         self.device_manager = device_manager
         
         self.update_connection_status(success=True)
-        self.log(f"✅ Подключение успешно установлено: {ws_url}")
+        self.logger.success(f"Подключение успешно установлено: {ws_url}")
+        self._update_logs()
     
     def on_connection_error(self, error_message):
         """Обработчик ошибки подключения"""
         self.update_connection_status(disconnected=True)
-        self.log(f"❌ Ошибка подключения: {error_message}")
+        self.logger.error(f"Ошибка подключения: {error_message}")
+        self._update_logs()
     
     def update_connection_status(self, success=False, disconnected=False):
         """Обновляет статус подключения в UI"""
@@ -129,10 +140,16 @@ class MainWindow(QMainWindow):
     def load_devices(self):
         """Загружает список устройств"""
         if not self.device_manager:
-            self.log("❌ Устройства не загружены — нет подключения")
+            self.logger.error("Устройства не загружены — нет подключения")
+            self._update_logs()
             return
         
-        self.log("📦 Загрузка устройств...")
+        self.logger.info("Загрузка устройств...")
+        self._update_logs()
+        
+        # Очищаем текущие устройства и показываем индикатор загрузки
+        self.devices_panel.clear_devices()
+        self.devices_panel.show_loading_indicator("🔄 Загрузка устройств...")
         
         # Запускаем загрузку в отдельном потоке
         self.device_loader = DeviceLoader(self.device_manager)
@@ -143,22 +160,26 @@ class MainWindow(QMainWindow):
     def display_devices(self, categorized):
         """Отображает загруженные устройства"""
         self.devices_panel.update_devices(categorized)
-        self.log("✅ Устройства загружены")
+        
+        # Подсчитываем общее количество устройств
+        total_devices = sum(len(devices) for devices in categorized.values())
+        self.logger.success(f"Устройства загружены ({total_devices} шт.)")
+        self._update_logs()
     
     def on_device_load_error(self, error):
         """Обработчик ошибки загрузки устройств"""
-        self.log(f"❌ Ошибка загрузки устройств: {error}")
+        self.logger.error(f"Ошибка загрузки устройств: {error}")
+        self._update_logs()
     
     def open_device_details(self, device):
         """Открывает диалог с подробной информацией об устройстве"""
         dialog = DeviceDialog(device, self.entity_manager, parent=self)
         dialog.exec()
     
-    def log(self, message):
-        """Добавляет сообщение в лог"""
-        current_text = self.ui.textEditLogs.toPlainText()
-        new_text = f"{current_text}\n{message}" if current_text else message
-        self.ui.textEditLogs.setPlainText(new_text)
+    def _update_logs(self):
+        """Обновляет отображение логов в UI"""
+        self.ui.textEditLogs.setPlainText(self.logger.get_text_log())
+        # Прокручиваем до конца
         self.ui.textEditLogs.verticalScrollBar().setValue(
             self.ui.textEditLogs.verticalScrollBar().maximum()
         )
