@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QFile, QTextStream
 from ui.MainWindow.main_ui import Ui_MainWindow
 from ui.ConnectionSettingsWindow.connection_settings_window import ConnectionSettingsWindow
+from ui.DeviceWidgets.categorized_devices_widget import CategorizedDevicesWidget
+from ui.DeviceWidgets.device_detail_dialog import DeviceDetailDialog
 from core.db_manager import HAConnectionDB
 from core.connection_worker import ConnectionWorker
 from core.device_loader import DeviceLoader
@@ -27,6 +29,10 @@ class MainWindow(QMainWindow):
 
         self.connection_worker = None
         self.device_loader = None
+        
+        # Добавляем виджет для отображения устройств
+        self.categorized_devices_widget = None
+        self.setup_device_view()
 
         # Подключение сигналов
         self.ui.btnGetDevices.clicked.connect(self.load_devices)
@@ -36,6 +42,19 @@ class MainWindow(QMainWindow):
         # Загрузка подключений
         self.load_connection_list()
         self.update_connection_status(disconnected=True)
+
+    def setup_device_view(self):
+        # Удаляем текущий контент
+        layout = self.ui.layoutDeviceList
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        
+        # Создаем и добавляем виджет категоризированных устройств
+        self.categorized_devices_widget = CategorizedDevicesWidget()
+        self.categorized_devices_widget.deviceSelected.connect(self.open_device_details)
+        layout.addWidget(self.categorized_devices_widget)
 
     def load_connection_list(self):
         current_id = self.selected_connection["id"] if self.selected_connection else None
@@ -109,51 +128,33 @@ class MainWindow(QMainWindow):
             return
 
         self.log("📦 Загрузка устройств...")
-        layout = self.ui.layoutDeviceList
+        
+        # Показываем индикатор загрузки
+        if self.categorized_devices_widget:
+            for category, tab in self.categorized_devices_widget.category_tabs.items():
+                loading_label = QLabel("🔄 Загрузка устройств...")
+                loading_label.setStyleSheet("font-weight: bold; color: orange;")
+                tab.flow_layout.addWidget(loading_label)
 
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
-        loading_label = QLabel("🔄 Загрузка устройств...")
-        loading_label.setStyleSheet("font-weight: bold; color: orange;")
-        layout.addWidget(loading_label)
-
+        # Запускаем загрузку в отдельном потоке
         self.device_loader = DeviceLoader(self.device_manager)
         self.device_loader.devices_loaded.connect(self.display_devices)
         self.device_loader.error.connect(self.on_device_load_error)
         self.device_loader.start()
 
     def display_devices(self, categorized):
-        layout = self.ui.layoutDeviceList
-
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
-        for category, devices in categorized.items():
-            if not devices:
-                continue
-
-            label = QLabel(f"<b>{category} ({len(devices)})</b>")
-            layout.addWidget(label)
-
-            for device in devices:
-                text = f"<b>{device['name']}</b> | {device['manufacturer']} {device['model']}"
-                dev_label = QLabel(text)
-                dev_label.setStyleSheet("margin-left: 20px;")
-                layout.addWidget(dev_label)
-
+        """Отображает устройства по категориям"""
+        if self.categorized_devices_widget:
+            self.categorized_devices_widget.update_devices(categorized)
         self.log("✅ Устройства загружены")
 
     def on_device_load_error(self, error):
-        layout = self.ui.layoutDeviceList
-        error_label = QLabel(f"❌ Ошибка загрузки устройств: {error}")
-        error_label.setStyleSheet("font-weight: bold; color: red;")
-        layout.addWidget(error_label)
         self.log(f"❌ Ошибка загрузки устройств: {error}")
+
+    def open_device_details(self, device):
+        """Открывает окно с подробной информацией об устройстве"""
+        dialog = DeviceDetailDialog(device, self.entity_manager, parent=self)
+        dialog.exec()
 
     def log(self, message: str):
         old_text = self.ui.textEditLogs.toPlainText()
