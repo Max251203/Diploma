@@ -1,26 +1,8 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QGridLayout, 
                              QPushButton, QFrame, QScrollArea, QMessageBox, QWidget)
-from PySide6.QtCore import Qt, QTimer, Signal, QThread
-from ui.widgets.entity_widget import EntityWidget
-
-class StateLoaderThread(QThread):
-    """Поток для загрузки состояний сущностей"""
-    states_loaded = Signal(dict)
-    error = Signal(str)
-    
-    def __init__(self, entity_manager):
-        super().__init__()
-        self.entity_manager = entity_manager
-    
-    def run(self):
-        try:
-            # Получаем все состояния
-            states = self.entity_manager.ws.send_command("get_states")
-            # Преобразуем в словарь для быстрого доступа
-            state_map = {s.get("entity_id"): s for s in states}
-            self.states_loaded.emit(state_map)
-        except Exception as e:
-            self.error.emit(str(e))
+from PySide6.QtCore import QTimer
+from core.workers.state_loader import StateLoaderThread
+from ui.widgets.entity_widget import EntityWidget, EntityState
 
 class DeviceDialog(QDialog):
     """Диалог для отображения и управления устройством"""
@@ -30,6 +12,7 @@ class DeviceDialog(QDialog):
         self.device = device
         self.entity_manager = entity_manager
         self.entity_widgets = {}
+        self.entity_ids = [e.get("entity_id") for e in device['entities'] if e.get("entity_id")]
         
         self.setWindowTitle(f"Устройство: {device['name']}")
         self.setMinimumSize(600, 400)
@@ -59,9 +42,10 @@ class DeviceDialog(QDialog):
         info_layout.addWidget(QLabel(self.device['id']), 3, 1)
         
         # Кнопка опроса для устройств с датчиками
-        has_sensors = any(e.get("entity_id", "").startswith("sensor.") for e in self.device['entities'])
+        has_sensors = any(e.get("entity_id", "").startswith(("sensor.", "binary_sensor.")) for e in self.device['entities'])
         if has_sensors:
             refresh_btn = QPushButton("Опросить")
+            refresh_btn.setObjectName("refreshButton")
             refresh_btn.clicked.connect(self.load_states)
             info_layout.addWidget(refresh_btn, 4, 0, 1, 2)
         
@@ -114,8 +98,12 @@ class DeviceDialog(QDialog):
     
     def load_states(self):
         """Загружает состояния сущностей в отдельном потоке"""
+        # Устанавливаем состояние загрузки для всех сущностей
+        for widget in self.entity_widgets.values():
+            widget.set_state(EntityState.LOADING)
+        
         # Запускаем загрузку
-        self.state_loader = StateLoaderThread(self.entity_manager)
+        self.state_loader = StateLoaderThread(self.entity_manager, self.entity_ids)
         self.state_loader.states_loaded.connect(self._update_states)
         self.state_loader.error.connect(self._handle_state_error)
         self.state_loader.start()
@@ -123,8 +111,7 @@ class DeviceDialog(QDialog):
     def _update_states(self, state_map):
         """Обновляет состояния в виджетах сущностей"""
         for entity_id, widget in self.entity_widgets.items():
-            state_data = state_map.get(entity_id)
-            widget.update_state(state_data)
+            widget.update_state(state_map.get(entity_id))
     
     def _handle_state_error(self, error):
         """Обрабатывает ошибку загрузки состояний"""
@@ -140,8 +127,8 @@ class DeviceDialog(QDialog):
                 "service_data": {"entity_id": entity_id}
             })
             
-            # Обновляем состояния через 1 секунду
-            QTimer.singleShot(1000, self.load_states)
+            # Обновляем состояния
+            QTimer.singleShot(500, self.load_states)
             
         except Exception as e:
             QMessageBox.warning(self, "Ошибка", f"Не удалось выполнить действие: {str(e)}")

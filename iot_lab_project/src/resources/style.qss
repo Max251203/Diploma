@@ -279,25 +279,30 @@ QMessageBox {
     border-radius: 10px;
 }
 
+/* Вертикальная полоса прокрутки */
 #deviceScroll QScrollBar:vertical {
     border: 1px solid rgb(0, 191, 255);
     background: transparent;
-    width: 8px;
-    margin: 10px 5px 10px 0px; /* Отступы сверху, справа, снизу, слева */
-    border-radius: 4px;
+    width: 12px; /* Увеличим ширину для лучшего визуального эффекта */
+    margin: 10px 2px 10px 0px; /* Подправим отступы */
+    border-radius: 6px; /* Половина ширины полосы для полного скругления */
 }
 
+/* Ползунок (handle) */
 #deviceScroll QScrollBar::handle:vertical {
     background-color: rgb(128, 0, 128);
     min-height: 30px;
-    border-radius: 4px;
+    border-radius: 6px; /* Должно соответствовать радиусу полосы */
+    margin: 0px 2px; /* Отступы слева/справа для "утопленного" эффекта */
 }
 
+/* Убираем стрелки */
 #deviceScroll QScrollBar::add-line:vertical,
 #deviceScroll QScrollBar::sub-line:vertical {
     height: 0px;
 }
 
+/* Убираем фон страницы */
 #deviceScroll QScrollBar::add-page:vertical,
 #deviceScroll QScrollBar::sub-page:vertical {
     background: none;
@@ -339,24 +344,91 @@ QMessageBox {
     border: 2px solid rgb(0, 191, 255);
     border-radius: 10px;
     margin: 5px;
-    padding: 8px;
+    padding: 10px;
 }
 
 #entityItemFrame:hover {
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
     border: 2px solid rgb(0, 255, 255);
+}
+
+#entityNameLabel {
+    font-size: 12px;
+    color: #c6e2ff;
+    font-weight: bold;
+    border: none;
+    background: transparent;
+}
+
+#entityIdLabel {
+    font-size: 10px;
+    color: #a0c0e0;
+    border: none;
+    background: transparent;
+}
+
+#entityStateLabel {
+    font-size: 11px;
+    color: #ffcc00;
+    margin-top: 5px;
+    border: none;
+    background: transparent;
+}
+
+#entityStateLabel[stateType="loading"] {
+    color: #ffcc00;
+    font-weight: bold;
+}
+
+#entityStateLabel[stateType="unavailable"] {
+    color: #ff6666;
+}
+
+#entityStateLabel[stateType="normal"] {
+    color: #ffcc00;
 }
 
 #entityControlFrame {
     background-color: transparent;
     border: none;
+    margin-top: 5px;
 }
 
-#entityControlFrame QPushButton {
+#entityControlButtonOn, #entityControlButtonOff {
     min-height: 25px;
     font-size: 10px;
     padding: 2px 5px;
     border: 1px solid rgb(0, 191, 255);
+    border-radius: 8px;
+    margin: 3px;
+}
+
+#entityControlButtonOn {
+    background-color: rgba(0, 100, 0, 0.4);
+}
+
+#entityControlButtonOn:hover {
+    background-color: rgba(0, 150, 0, 0.5);
+    border: 1px solid rgb(0, 255, 255);
+}
+
+#entityControlButtonOff {
+    background-color: rgba(100, 0, 0, 0.4);
+}
+
+#entityControlButtonOff:hover {
+    background-color: rgba(150, 0, 0, 0.5);
+    border: 1px solid rgb(0, 255, 255);
+}
+
+#refreshButton {
+    background-color: rgba(0, 100, 150, 0.4);
+    font-weight: bold;
+    min-height: 30px;
+}
+
+#refreshButton:hover {
+    background-color: rgba(0, 150, 200, 0.5);
 }
 
 /* === ПРОЗРАЧНЫЙ ФОН ДЛЯ ОБЛАСТЕЙ ПРОКРУТКИ === */

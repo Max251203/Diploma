@@ -114,9 +114,10 @@ class MainWindow(QMainWindow):
         self.connection_worker.connection_failed.connect(self.on_connection_error)
         self.connection_worker.start()
     
-    def on_connected(self, ws_client, entity_manager, device_manager, ws_url):
+    def on_connected(self, ws_client, rest_client, entity_manager, device_manager, ws_url):
         """Обработчик успешного подключения"""
         self.ws_client = ws_client
+        self.rest_client = rest_client
         self.entity_manager = entity_manager
         self.device_manager = device_manager
         
