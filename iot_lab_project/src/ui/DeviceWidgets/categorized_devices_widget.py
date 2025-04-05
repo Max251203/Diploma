@@ -16,7 +16,7 @@ class CategorizedDevicesWidget(QWidget):
         self.setup_ui()
         
     def setup_ui(self):
-        # Основной горизонтальный layout с небольшим отступом между элементами
+        # Основной горизонтальный layout с нулевыми внешними отступами
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)  # Убираем внешние отступы
         self.main_layout.setSpacing(5)  # Небольшой отступ между элементами
@@ -31,13 +31,21 @@ class CategorizedDevicesWidget(QWidget):
         # Контейнер для устройств справа
         self.device_container = QWidget()
         self.device_container.setObjectName("deviceContainer")
+        
+        # Настраиваем область прокрутки
         self.device_scroll = QScrollArea()
         self.device_scroll.setWidgetResizable(True)
+        # Важно: устанавливаем политику прокрутки, чтобы полоса прокрутки была всегда внутри
+        self.device_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.device_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
         self.device_scroll.setWidget(self.device_container)
         self.main_layout.addWidget(self.device_scroll)
         
         # Flow layout для устройств
         self.device_layout = QVBoxLayout(self.device_container)
+        # Устанавливаем правые отступы, чтобы учесть полосу прокрутки
+        self.device_layout.setContentsMargins(5, 5, 15, 5)  # Больше отступ справа
         self.flow_layout = FlowLayout()
         self.device_layout.addLayout(self.flow_layout)
         self.device_layout.addStretch()

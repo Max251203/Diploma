@@ -43,9 +43,14 @@ class MainWindow(QMainWindow):
         self.load_connection_list()
         self.update_connection_status(disconnected=True)
 
+    # В методе setup_device_view класса MainWindow
     def setup_device_view(self):
         # Удаляем текущий контент
         layout = self.ui.layoutDeviceList
+        
+        # Устанавливаем нулевые отступы для layout'а
+        layout.setContentsMargins(0, 0, 0, 0)
+        
         while layout.count():
             child = layout.takeAt(0)
             if child.widget():

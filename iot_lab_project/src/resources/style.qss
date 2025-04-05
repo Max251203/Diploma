@@ -303,21 +303,23 @@ QLabel[status="error"] {
 
 /* === Стили для панели категорий === */
 #categoryList {
-    background-color: rgba(0, 0, 0, 0.2);  /* Светлее */
+    background-color: rgba(0, 0, 0, 0.2);
     border: 2px solid rgb(0, 191, 255);
     border-radius: 10px;
     min-width: 180px;
     max-width: 220px;
     padding: 5px;
-    margin: 0;  /* Убираем отступы */
+    margin: 0;
+    outline: none;  /* Убираем пунктирную рамку при фокусе */
 }
 
 #categoryList::item {
     height: 40px;
     padding: 5px;
     border-radius: 5px;
-    font-weight: bold;  /* Делаем названия категорий жирными */
-    border-bottom: 1px solid rgba(0, 191, 255, 0.3);  /* Добавляем разделитель */
+    font-weight: bold;
+    border-bottom: 1px solid rgba(0, 191, 255, 0.3);
+    color: rgb(198, 226, 255);  /* Устанавливаем цвет текста */
 }
 
 #categoryList::item:hover {
@@ -325,8 +327,13 @@ QLabel[status="error"] {
 }
 
 #categoryList::item:selected {
-    background-color: rgba(0, 0, 255, 0.2);
     border: 1px solid rgb(0, 191, 255);
+    background-color: transparent;  /* Убираем синий фон */
+    color: rgb(198, 226, 255);  /* Сохраняем цвет текста при выборе */
+}
+
+#categoryList::item:focus {
+    outline: none;  /* Убираем пунктирную рамку при фокусе */
 }
 
 #deviceContainer {
