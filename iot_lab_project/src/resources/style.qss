@@ -300,3 +300,63 @@ QLabel[status="error"] {
     font-weight: bold;
     color: red;
 }
+
+/* === Стили для карточки устройства === */
+DeviceCard {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    padding: 5px;
+    margin: 5px;
+}
+
+DeviceCard:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgb(0, 255, 255);
+}
+
+/* === Стили для диалога устройства === */
+#deviceInfoFrame, #entityListFrame {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    padding: 5px;
+}
+
+#entityItemFrame {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgb(0, 191, 255);
+    border-radius: 5px;
+    margin: 2px;
+}
+
+/* === Стили для панели категорий === */
+#categoryList {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    min-width: 180px;
+    max-width: 220px;
+    padding: 5px;
+}
+
+#categoryList::item {
+    height: 40px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#categoryList::item:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+#categoryList::item:selected {
+    background-color: rgba(0, 0, 255, 0.2);
+    border: 1px solid rgb(0, 191, 255);
+}
+
+#deviceContainer {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+}

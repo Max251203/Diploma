@@ -11,25 +11,10 @@ class DeviceCard(QFrame):
         self.setup_ui()
         
     def setup_ui(self):
-        # Стилизация карточки
+        # Устанавливаем objectName для применения стилей из QSS
+        self.setObjectName("DeviceCard")
         self.setFrameShape(QFrame.StyledPanel)
         self.setFrameShadow(QFrame.Raised)
-        self.setStyleSheet("""
-            DeviceCard {
-                background-color: rgba(0, 0, 0, 0.3);
-                border: 2px solid rgb(0, 191, 255);
-                border-radius: 10px;
-                padding: 5px;
-                margin: 5px;
-            }
-            DeviceCard:hover {
-                background-color: rgba(0, 0, 0, 0.5);
-                border: 2px solid rgb(0, 255, 255);
-            }
-            QLabel {
-                color: rgb(198, 226, 255);
-            }
-        """)
         self.setCursor(Qt.PointingHandCursor)
         
         # Создаем layout

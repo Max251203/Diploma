@@ -129,13 +129,18 @@ class MainWindow(QMainWindow):
 
         self.log("📦 Загрузка устройств...")
         
-        # Показываем индикатор загрузки
+        # Очищаем текущие устройства и показываем индикатор загрузки
         if self.categorized_devices_widget:
-            for category, tab in self.categorized_devices_widget.category_tabs.items():
-                loading_label = QLabel("🔄 Загрузка устройств...")
-                loading_label.setStyleSheet("font-weight: bold; color: orange;")
-                tab.flow_layout.addWidget(loading_label)
-
+            # Очищаем текущие устройства
+            self.categorized_devices_widget.devices_by_category = {}
+            for category in self.categorized_devices_widget.categories:
+                self.categorized_devices_widget.display_category(category)
+            
+            # Добавляем индикатор загрузки
+            loading_label = QLabel("🔄 Загрузка устройств...")
+            loading_label.setStyleSheet("font-weight: bold; color: orange;")
+            self.categorized_devices_widget.flow_layout.addWidget(loading_label)
+        
         # Запускаем загрузку в отдельном потоке
         self.device_loader = DeviceLoader(self.device_manager)
         self.device_loader.devices_loaded.connect(self.display_devices)
