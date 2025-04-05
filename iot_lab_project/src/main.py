@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QFile, QTextStream
-from ui.windows.main_window import MainWindow
+from ui.windows.Main.main_window import MainWindow
 
 def load_stylesheet():
     """Загружает стили из файла"""

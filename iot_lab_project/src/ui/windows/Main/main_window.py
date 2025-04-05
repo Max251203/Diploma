@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import (QMainWindow, QLabel, QMessageBox, 
                              QDialog, QVBoxLayout, QComboBox)
 from PySide6.QtCore import QFile, QTextStream
-from ui.windows.main_ui import Ui_MainWindow
-from ui.windows.connection_dialog import ConnectionDialog
-from ui.windows.device_dialog import DeviceDialog
+from ui.windows.Main.main_ui import Ui_MainWindow
+from ui.windows.Connection.connection_dialog import ConnectionDialog
+from ui.windows.Device.device_dialog import DeviceDialog
 from ui.panels.devices_panel import DevicesPanel
 from core.db.connection_db import HAConnectionDB
 from core.workers.connection_worker import ConnectionWorker
