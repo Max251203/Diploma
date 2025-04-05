@@ -21,13 +21,13 @@ QWidget#centralwidget, QDialog {
     background-color: rgba(0, 0, 0, 0.6);
 }
 
-/* === ПАНЕЛЬ ПОДКЛЮЧЕНИЯ (внутренняя) === */
+/* === ПАНЕЛЬ ПОДКЛЮЧЕНИЯ === */
 #connectionControlFrame {
     background-color: transparent;
     border: none;
 }
 
-/* === ПАНЕЛЬ КНОПОК (подключение и управление) === */
+/* === ПАНЕЛЬ КНОПОК === */
 #buttonPanel {
     background-color: rgba(0, 0, 0, 0.3);
     border: 2px outset rgb(0, 191, 255);
@@ -43,7 +43,7 @@ QLabel {
     font-size: 10pt;
 }
 
-/* === QLabel статуса (точечно) === */
+/* === QLabel СТАТУСА === */
 #labelConnectionInfo {
     border: none;
     background: transparent;
@@ -98,15 +98,6 @@ QLineEdit:focus {
     border: 2px solid #c6e2ff;
 }
 
-/* === Индикатор шага (QLabel) === */
-#step_box {
-    min-width: 50px;
-    max-width: 100px;
-    border-radius: 10px;
-    background-color: rgba(0, 0, 0, 0.3);
-    qproperty-alignment: AlignCenter;
-}
-
 /* === QPushButton === */
 QPushButton {
     min-height: 28px;
@@ -134,51 +125,6 @@ QPushButton:pressed {
     );
 }
 
-/* === QCheckBox === */
-#ansysCheck {
-    min-height: 30px;
-    padding: 2px;
-    spacing: 8px;
-    border-radius: 10px;
-    background-color: rgba(0, 0, 0, 0.3);
-    font-size: 11pt;
-}
-
-#ansysCheck::indicator {
-    height: 22px;
-    width: 22px;
-}
-
-/* === QSlider === */
-QSlider {
-    min-width: 150px;
-}
-
-QSlider::groove:horizontal {
-    height: 1px;
-    border: none;
-}
-
-QSlider::handle:horizontal {
-    background: rgb(0, 0, 0);
-    width: 20px;
-    margin: -10px -1px;
-    border: 1px solid rgb(0, 255, 255);
-    border-radius: 10px;
-}
-
-QSlider::handle:horizontal:hover {
-    background: rgb(0, 255, 255);
-}
-
-QSlider::add-page:horizontal {
-    background-color: rgb(70, 130, 180);
-}
-
-QSlider::sub-page:horizontal {
-    background: rgb(0, 255, 255);
-}
-
 /* === QListWidget === */
 QListWidget {
     padding: 5px;
@@ -200,7 +146,7 @@ QListView::item:selected {
     background: rgb(72, 61, 139);
 }
 
-/* === QScrollBar (вертикальный) === */
+/* === QScrollBar === */
 QScrollBar:vertical {
     border: 2px solid rgb(0, 191, 255);
     background: transparent;
@@ -231,7 +177,7 @@ QScrollBar::sub-page:vertical {
     background: none;
 }
 
-/* === QTabWidget и вкладки === */
+/* === QTabWidget === */
 QTabWidget {
     min-height: 400px;
 }
@@ -265,7 +211,7 @@ QTabWidget QWidget {
     border-width: 0px;
 }
 
-/* === QTextEdit (логи) === */
+/* === QTextEdit === */
 QTextEdit {
     background-color: rgba(0, 0, 0, 0.4);
     font: 10pt "Consolas";
@@ -285,23 +231,7 @@ QMessageBox {
     );
 }
 
-/* === Метки статуса (загрузка, успех, ошибка) === */
-QLabel[loading="true"] {
-    font-weight: bold;
-    color: orange;
-}
-
-QLabel[status="success"] {
-    font-weight: bold;
-    color: #00ff88;
-}
-
-QLabel[status="error"] {
-    font-weight: bold;
-    color: red;
-}
-
-/* === Стили для панели категорий === */
+/* === СТИЛИ ДЛЯ ПАНЕЛИ КАТЕГОРИЙ === */
 #categoryList {
     background-color: rgba(0, 0, 0, 0.2);
     border: 2px solid rgb(0, 191, 255);
@@ -310,7 +240,7 @@ QLabel[status="error"] {
     max-width: 220px;
     padding: 5px;
     margin: 0;
-    outline: none;  /* Убираем пунктирную рамку при фокусе */
+    outline: none;
 }
 
 #categoryList::item {
@@ -319,7 +249,7 @@ QLabel[status="error"] {
     border-radius: 5px;
     font-weight: bold;
     border-bottom: 1px solid rgba(0, 191, 255, 0.3);
-    color: rgb(198, 226, 255);  /* Устанавливаем цвет текста */
+    color: rgb(198, 226, 255);
 }
 
 #categoryList::item:hover {
@@ -328,22 +258,36 @@ QLabel[status="error"] {
 
 #categoryList::item:selected {
     border: 1px solid rgb(0, 191, 255);
-    background-color: transparent;  /* Убираем синий фон */
-    color: rgb(198, 226, 255);  /* Сохраняем цвет текста при выборе */
+    background-color: transparent;
+    color: rgb(198, 226, 255);
 }
 
 #categoryList::item:focus {
-    outline: none;  /* Убираем пунктирную рамку при фокусе */
+    outline: none;
 }
 
+/* === СТИЛИ ДЛЯ КОНТЕЙНЕРА УСТРОЙСТВ === */
 #deviceContainer {
-    background-color: rgba(0, 0, 0, 0.2);  /* Светлее */
+    background-color: rgba(0, 0, 0, 0.2);
     border: 2px solid rgb(0, 191, 255);
     border-radius: 10px;
-    margin: 0;  /* Убираем отступы */
+    margin: 0;
 }
 
-/* === Стили для карточки устройства === */
+/* === СТИЛИ ДЛЯ ОБЛАСТИ ПРОКРУТКИ === */
+#deviceScroll {
+    border: none;
+    background: transparent;
+}
+
+#deviceScroll QScrollBar:vertical {
+    border: 1px solid rgb(0, 191, 255);
+    background: transparent;
+    width: 10px;
+    margin: 0;
+}
+
+/* === СТИЛИ ДЛЯ КАРТОЧКИ УСТРОЙСТВА === */
 #DeviceCard {
     background-color: rgba(0, 0, 0, 0.3);
     border: 2px solid rgb(0, 191, 255);
@@ -357,7 +301,7 @@ QLabel[status="error"] {
     border: 2px solid rgb(0, 255, 255);
 }
 
-/* === Стили для диалога устройства === */
+/* === СТИЛИ ДЛЯ ДИАЛОГА УСТРОЙСТВА === */
 #deviceInfoFrame {
     background-color: rgba(0, 0, 0, 0.2);
     border: 2px solid rgb(0, 191, 255);
@@ -373,7 +317,7 @@ QLabel[status="error"] {
     padding: 5px;
 }
 
-/* Убираем белый фон в списке сущностей */
+/* === ПРОЗРАЧНЫЙ ФОН ДЛЯ ОБЛАСТЕЙ ПРОКРУТКИ === */
 QScrollArea, QScrollArea > QWidget > QWidget {
     background: transparent;
     border: none;
