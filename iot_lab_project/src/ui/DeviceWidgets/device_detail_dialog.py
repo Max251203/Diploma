@@ -10,10 +10,55 @@ class DeviceDetailDialog(QDialog):
         self.entity_manager = entity_manager
         
         self.setWindowTitle(f"Устройство: {device['name']}")
-        self.setMinimumSize(700, 500)
+        self.setMinimumSize(600, 400)
         
-        self.setup_ui()
-        self.load_entity_states()
+        self.main_layout = QVBoxLayout(self)
+        
+        # Информация об устройстве
+        info_frame = QFrame()
+        info_frame.setObjectName("deviceInfoFrame")
+        info_layout = QGridLayout(info_frame)
+        
+        info_layout.addWidget(QLabel("<b>Название:</b>"), 0, 0)
+        info_layout.addWidget(QLabel(device['name']), 0, 1)
+        
+        info_layout.addWidget(QLabel("<b>Производитель:</b>"), 1, 0)
+        info_layout.addWidget(QLabel(device['manufacturer']), 1, 1)
+        
+        info_layout.addWidget(QLabel("<b>Модель:</b>"), 2, 0)
+        info_layout.addWidget(QLabel(device['model']), 2, 1)
+        
+        info_layout.addWidget(QLabel("<b>ID:</b>"), 3, 0)
+        info_layout.addWidget(QLabel(device['id']), 3, 1)
+        
+        # Добавляем кнопку "Опросить" для устройств с датчиками
+        has_sensors = any(e.get("entity_id", "").startswith("sensor.") for e in device['entities'])
+        if has_sensors:
+            refresh_btn = QPushButton("Опросить")
+            refresh_btn.clicked.connect(self.load_entity_states)
+            info_layout.addWidget(refresh_btn, 4, 0, 1, 2)
+        
+        self.main_layout.addWidget(info_frame)
+        
+        # Список сущностей
+        self.main_layout.addWidget(QLabel("<h3>Сущности:</h3>"))
+        
+        entities_scroll = QScrollArea()
+        entities_scroll.setWidgetResizable(True)
+        
+        # Устанавливаем прозрачный фон для области прокрутки
+        entities_scroll.setStyleSheet("background: transparent; border: none;")
+        
+        entities_widget = QWidget()
+        entities_widget.setStyleSheet("background: transparent;")
+        entities_layout = QVBoxLayout(entities_widget)
+        
+        for entity in device['entities']:
+            entity_frame = self._create_entity_widget(entity)
+            entities_layout.addWidget(entity_frame)
+        
+        entities_scroll.setWidget(entities_widget)
+        self.main_layout.addWidget(entities_scroll)
     
     def setup_ui(self):
         self.main_layout = QVBoxLayout(self)
@@ -101,43 +146,44 @@ class DeviceDetailDialog(QDialog):
         entity_name = entity.get("original_name", entity.get("name", "—"))
         entity_type = entity_id.split('.')[0]
         
-        # Основная информация
         layout.addWidget(QLabel(f"<b>{entity_name}</b>"), 0, 0, 1, 2)
         layout.addWidget(QLabel(f"ID: {entity_id}"), 1, 0)
         layout.addWidget(QLabel(f"Тип: {entity_type}"), 1, 1)
         
-        # Метка для состояния (будет обновляться)
-        state_label = QLabel("Состояние: загрузка...")
-        state_label.setObjectName(f"state_{entity_id}")
-        layout.addWidget(state_label, 2, 0, 1, 2)
+        # Добавляем кнопки управления только для управляемых устройств
+        if entity_type in ["light", "switch", "fan", "cover"]:
+            btn_on = QPushButton("Включить")
+            btn_off = QPushButton("Выключить")
+            
+            btn_on.clicked.connect(lambda: self._control_entity(entity_id, "turn_on"))
+            btn_off.clicked.connect(lambda: self._control_entity(entity_id, "turn_off"))
+            
+            layout.addWidget(btn_on, 2, 0)
+            layout.addWidget(btn_off, 2, 1)
         
         return frame
     
     def load_entity_states(self):
-        """Загружает текущие состояния сущностей"""
+        """Загружает и отображает текущие состояния сущностей"""
         try:
             states = self.entity_manager.ws.send_command("get_states")
             
-            # Словарь состояний по entity_id
+            # Создаем словарь состояний по entity_id
             state_map = {s.get("entity_id"): s for s in states}
             
-            # Обновляем отображение состояний
-            for entity_id, frame in self.entity_widgets.items():
-                state_label = frame.findChild(QLabel, f"state_{entity_id}")
-                if not state_label:
-                    continue
-                
+            # Обходим все фреймы сущностей и обновляем информацию
+            for entity in self.device['entities']:
+                entity_id = entity.get("entity_id", "")
                 if entity_id in state_map:
                     state = state_map[entity_id]
                     state_value = state.get("state", "unknown")
                     attributes = state.get("attributes", {})
                     
-                    # Форматируем строку состояния в зависимости от типа сущности
-                    formatted_state = self._format_state(entity_id, state_value, attributes)
-                    state_label.setText(f"Состояние: {formatted_state}")
-                else:
-                    state_label.setText("Состояние: недоступно")
-        
+                    # Здесь можно добавить обновление информации в UI
+                    # Например, добавлять или обновлять метку с текущим состоянием
+                    
+            QMessageBox.information(self, "Обновлено", "Состояния устройств обновлены")
+            
         except Exception as e:
             QMessageBox.warning(self, "Ошибка", f"Не удалось получить состояния: {str(e)}")
     

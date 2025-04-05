@@ -8,6 +8,8 @@ class DeviceCard(QFrame):
     def __init__(self, device, parent=None):
         super().__init__(parent)
         self.device = device
+        # Установка objectName для применения стилей
+        self.setObjectName("DeviceCard")
         self.setup_ui()
         
     def setup_ui(self):

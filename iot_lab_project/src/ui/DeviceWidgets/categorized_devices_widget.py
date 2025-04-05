@@ -16,8 +16,10 @@ class CategorizedDevicesWidget(QWidget):
         self.setup_ui()
         
     def setup_ui(self):
-        # Основной горизонтальный layout
+        # Основной горизонтальный layout с небольшим отступом между элементами
         self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)  # Убираем внешние отступы
+        self.main_layout.setSpacing(5)  # Небольшой отступ между элементами
         
         # Список категорий слева
         self.category_list = QListWidget()

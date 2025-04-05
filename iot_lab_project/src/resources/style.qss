@@ -301,49 +301,23 @@ QLabel[status="error"] {
     color: red;
 }
 
-/* === Стили для карточки устройства === */
-DeviceCard {
-    background-color: rgba(0, 0, 0, 0.3);
-    border: 2px solid rgb(0, 191, 255);
-    border-radius: 10px;
-    padding: 5px;
-    margin: 5px;
-}
-
-DeviceCard:hover {
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 2px solid rgb(0, 255, 255);
-}
-
-/* === Стили для диалога устройства === */
-#deviceInfoFrame, #entityListFrame {
-    background-color: rgba(0, 0, 0, 0.3);
-    border: 2px solid rgb(0, 191, 255);
-    border-radius: 10px;
-    padding: 5px;
-}
-
-#entityItemFrame {
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgb(0, 191, 255);
-    border-radius: 5px;
-    margin: 2px;
-}
-
 /* === Стили для панели категорий === */
 #categoryList {
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.2);  /* Светлее */
     border: 2px solid rgb(0, 191, 255);
     border-radius: 10px;
     min-width: 180px;
     max-width: 220px;
     padding: 5px;
+    margin: 0;  /* Убираем отступы */
 }
 
 #categoryList::item {
     height: 40px;
     padding: 5px;
     border-radius: 5px;
+    font-weight: bold;  /* Делаем названия категорий жирными */
+    border-bottom: 1px solid rgba(0, 191, 255, 0.3);  /* Добавляем разделитель */
 }
 
 #categoryList::item:hover {
@@ -356,7 +330,44 @@ DeviceCard:hover {
 }
 
 #deviceContainer {
+    background-color: rgba(0, 0, 0, 0.2);  /* Светлее */
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    margin: 0;  /* Убираем отступы */
+}
+
+/* === Стили для карточки устройства === */
+#DeviceCard {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgb(0, 191, 255);
+    border-radius: 10px;
+    padding: 5px;
+    margin: 5px;
+}
+
+#DeviceCard:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgb(0, 255, 255);
+}
+
+/* === Стили для диалога устройства === */
+#deviceInfoFrame {
     background-color: rgba(0, 0, 0, 0.2);
     border: 2px solid rgb(0, 191, 255);
     border-radius: 10px;
+    padding: 5px;
+}
+
+#entityItemFrame {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgb(0, 191, 255);
+    border-radius: 5px;
+    margin: 2px;
+    padding: 5px;
+}
+
+/* Убираем белый фон в списке сущностей */
+QScrollArea, QScrollArea > QWidget > QWidget {
+    background: transparent;
+    border: none;
 }
