@@ -32,17 +32,17 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayoutTopInfo = QHBoxLayout()
         self.horizontalLayoutTopInfo.setObjectName(u"horizontalLayoutTopInfo")
-        self.labelConnectionInfo = QLabel(self.centralwidget)
-        self.labelConnectionInfo.setObjectName(u"labelConnectionInfo")
+        self.connectionStatus = QLabel(self.centralwidget)
+        self.connectionStatus.setObjectName(u"connectionStatus")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.labelConnectionInfo.sizePolicy().hasHeightForWidth())
-        self.labelConnectionInfo.setSizePolicy(sizePolicy)
-        self.labelConnectionInfo.setStyleSheet(u"padding-right: 5px;")
-        self.labelConnectionInfo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sizePolicy.setHeightForWidth(self.connectionStatus.sizePolicy().hasHeightForWidth())
+        self.connectionStatus.setSizePolicy(sizePolicy)
+        self.connectionStatus.setStyleSheet(u"padding-right: 5px;")
+        self.connectionStatus.setAlignment(Qt.AlignCenter)
 
-        self.horizontalLayoutTopInfo.addWidget(self.labelConnectionInfo)
+        self.horizontalLayoutTopInfo.addWidget(self.connectionStatus)
 
         self.comboConnections = QComboBox(self.centralwidget)
         self.comboConnections.setObjectName(u"comboConnections")
@@ -62,17 +62,17 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayoutTopInfo)
 
-        self.buttonPanel = QFrame(self.centralwidget)
-        self.buttonPanel.setObjectName(u"buttonPanel")
-        self.buttonPanel.setFrameShape(QFrame.Shape.StyledPanel)
-        self.horizontalLayoutButtons = QHBoxLayout(self.buttonPanel)
+        self.topButtonPanel = QFrame(self.centralwidget)
+        self.topButtonPanel.setObjectName(u"topButtonPanel")
+        self.topButtonPanel.setFrameShape(QFrame.Shape.StyledPanel)
+        self.horizontalLayoutButtons = QHBoxLayout(self.topButtonPanel)
         self.horizontalLayoutButtons.setObjectName(u"horizontalLayoutButtons")
-        self.btnConnect = QPushButton(self.buttonPanel)
+        self.btnConnect = QPushButton(self.topButtonPanel)
         self.btnConnect.setObjectName(u"btnConnect")
 
         self.horizontalLayoutButtons.addWidget(self.btnConnect)
 
-        self.btnGetDevices = QPushButton(self.buttonPanel)
+        self.btnGetDevices = QPushButton(self.topButtonPanel)
         self.btnGetDevices.setObjectName(u"btnGetDevices")
         icon = QIcon()
         icon.addFile(u":/icon/icons/get_devices.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
@@ -81,7 +81,7 @@ class Ui_MainWindow(object):
         self.horizontalLayoutButtons.addWidget(self.btnGetDevices)
 
 
-        self.verticalLayout.addWidget(self.buttonPanel)
+        self.verticalLayout.addWidget(self.topButtonPanel)
 
         self.tabWidgetMain = QTabWidget(self.centralwidget)
         self.tabWidgetMain.setObjectName(u"tabWidgetMain")
@@ -134,7 +134,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"IoT \u041b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u0438\u044f", None))
-        self.labelConnectionInfo.setText(QCoreApplication.translate("MainWindow", u"\u274c \u041d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u043e", None))
+        self.connectionStatus.setText(QCoreApplication.translate("MainWindow", u"\u274c \u041d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u043e", None))
 #if QT_CONFIG(tooltip)
         self.btnConnectSettings.setToolTip(QCoreApplication.translate("MainWindow", u"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0441\u043f\u0438\u0441\u043e\u043a \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0439", None))
 #endif // QT_CONFIG(tooltip)

@@ -18,8 +18,8 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayoutTopInfo">
       <item>
-       <widget class="QLabel" name="labelConnectionInfo">
-        <property name="sizePolicy">
+       <widget class="QLabel" name="connectionStatus">
+       <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
@@ -32,7 +32,7 @@
          <string>❌ Не подключено</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -59,7 +59,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QFrame" name="buttonPanel">
+     <widget class="QFrame" name="topButtonPanel">
       <property name="frameShape">
        <enum>QFrame::Shape::StyledPanel</enum>
       </property>
