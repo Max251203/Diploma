@@ -8,6 +8,7 @@ from core.db.connection_db import HAConnectionDB
 from core.workers.connection_worker import ConnectionWorker
 from core.workers.device_loader import DeviceLoader
 from utils.logger import Logger
+from ui.widgets.entity_widget import EntityWidget
 
 class MainWindow(QMainWindow):
     """Главное окно приложения"""
@@ -29,6 +30,7 @@ class MainWindow(QMainWindow):
         self.device_manager = None
         self.selected_connection = None
         self.db = HAConnectionDB()
+        self.entity_widgets = {}  # entity_id -> EntityWidget
 
         # Настройка интерфейса
         self.setup_ui()
@@ -105,6 +107,7 @@ class MainWindow(QMainWindow):
         )
         self.connection_worker.connection_success.connect(self.on_connected)
         self.connection_worker.connection_failed.connect(self.on_connection_error)
+        self.connection_worker.state_changed.connect(self.on_entity_state_changed)
         self.connection_worker.start()
 
     def on_connected(self, ws_client, rest_client, entity_manager, device_manager, ws_url):
@@ -165,7 +168,29 @@ class MainWindow(QMainWindow):
     def open_device_details(self, device):
         """Открывает диалог с подробной информацией об устройстве"""
         dialog = DeviceDialog(device, self.entity_manager, parent=self)
+
+        # Сохраняем EntityWidget'ы для live-обновления
+        for entity in device["entities"]:
+            entity_id = entity.get("entity_id")
+            widget = dialog.entity_widgets.get(entity_id)
+            if entity_id and widget:
+                self.entity_widgets[entity_id] = widget
+
         dialog.exec()
+
+        # После закрытия диалога — очищаем виджеты
+        for entity in device["entities"]:
+            entity_id = entity.get("entity_id")
+            if entity_id in self.entity_widgets:
+                del self.entity_widgets[entity_id]
+
+    def on_entity_state_changed(self, entity_id: str, new_state: dict):
+        """Обновляет состояние виджета сущности при получении события от WebSocket"""
+        widget = self.entity_widgets.get(entity_id)
+        if widget:
+            widget.update_state(new_state)
+            self.logger.info(f"[UI] Обновлено состояние: {entity_id} → {new_state.get('state')}")
+            self._update_logs()
 
     def _update_logs(self):
         """Обновляет отображение логов в UI"""

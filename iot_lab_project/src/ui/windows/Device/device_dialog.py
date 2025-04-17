@@ -1,17 +1,20 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QGridLayout,
-    QPushButton, QFrame, QScrollArea, QMessageBox, QWidget
+    QPushButton, QFrame, QScrollArea, QWidget, QMessageBox
 )
 from PySide6.QtCore import QTimer
 from core.workers.state_loader import StateLoaderThread
 from ui.widgets.entity_widget import EntityWidget, EntityState
+from typing import Dict
 
 class DeviceDialog(QDialog):
+    """Диалог отображения информации об устройстве и его сущностях"""
+
     def __init__(self, device, entity_manager, parent=None):
         super().__init__(parent)
         self.device = device
         self.entity_manager = entity_manager
-        self.entity_widgets = {}
+        self.entity_widgets: Dict[str, EntityWidget] = {}  # entity_id → EntityWidget
         self.entity_ids = [e.get("entity_id") for e in device['entities'] if e.get("entity_id")]
 
         self.setWindowTitle(f"Устройство: {device['name']}")
@@ -66,19 +69,22 @@ class DeviceDialog(QDialog):
         panel_layout.addWidget(scroll_area)
         layout.addWidget(panel_container)
 
-        # Добавляем сущности
+        # === Создание EntityWidget'ов ===
         for entity in self.device['entities']:
+            entity_id = entity.get("entity_id")
+            if not entity_id:
+                continue
+
             entity_widget = EntityWidget(entity)
             entity_widget.control_requested.connect(self._handle_control_request)
-            self.entity_layout.addWidget(entity_widget)
 
-            entity_id = entity.get("entity_id")
-            if entity_id:
-                self.entity_widgets[entity_id] = entity_widget
+            self.entity_layout.addWidget(entity_widget)
+            self.entity_widgets[entity_id] = entity_widget
 
         self.entity_layout.addStretch()
 
     def load_states(self):
+        """Загружает текущие состояния сущностей"""
         for widget in self.entity_widgets.values():
             widget.set_state(EntityState.LOADING)
 
@@ -95,6 +101,7 @@ class DeviceDialog(QDialog):
         QMessageBox.warning(self, "Ошибка", f"Не удалось получить состояния: {error}")
 
     def _handle_control_request(self, entity_id, action):
+        """Отправляет команду на управление сущностью"""
         try:
             domain = entity_id.split('.')[0]
             self.entity_manager.ws.send_command("call_service", {
