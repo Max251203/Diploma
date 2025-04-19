@@ -1,11 +1,14 @@
 from enum import Enum
 from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton, QHBoxLayout
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPixmap
+
 
 class EntityState(Enum):
     LOADING = "loading"
     READY = "ready"
     UNAVAILABLE = "unavailable"
+
 
 class EntityWidget(QFrame):
     """Виджет для отображения сущности"""
@@ -38,6 +41,7 @@ class EntityWidget(QFrame):
 
         self.state_label = QLabel()
         self.state_label.setObjectName("entityStateLabel")
+        self.state_label.setFixedHeight(24)
         layout.addWidget(self.state_label, 2, 0, 1, 2)
 
         if self.entity_type in ["light", "switch", "fan"]:

@@ -1,28 +1,26 @@
 from PySide6.QtCore import QThread, Signal
 from core.ha.entity_manager import EntityManager
 from typing import List, Dict, Optional
+from utils.logger import get_logger
 
 class StateLoaderThread(QThread):
-    """Поток для загрузки состояний сущностей"""
-
     states_loaded = Signal(dict)
     error = Signal(str)
 
     def __init__(self, entity_manager: EntityManager, entity_ids: Optional[List[str]] = None):
         super().__init__()
         self.entity_manager = entity_manager
-        self.entity_ids = entity_ids  # Список ID сущностей для обновления
+        self.entity_ids = entity_ids
+        self.logger = get_logger()
 
     def run(self):
         try:
-            # Обновляем сенсоры через REST (если есть)
             if self.entity_ids:
                 for entity_id in self.entity_ids:
                     domain = entity_id.split('.')[0]
                     if domain in ["sensor", "binary_sensor"]:
                         self.entity_manager.update_sensor(entity_id)
 
-            # Даем REST немного времени на обновление (не обязательно, но можно)
             self.msleep(500)
 
             if self.entity_ids and len(self.entity_ids) == 1:
@@ -37,7 +35,6 @@ class StateLoaderThread(QThread):
                 self.entity_manager.get_entity_state(entity_id, callback=on_state_loaded)
                 return
 
-            # Получаем все состояния
             def on_states_loaded(states: List[Dict]):
                 state_map = {s.get("entity_id"): s for s in states}
                 if self.entity_ids:
@@ -49,4 +46,5 @@ class StateLoaderThread(QThread):
             self.entity_manager.get_states(callback=on_states_loaded)
 
         except Exception as e:
+            self.logger.error(f"Ошибка при загрузке состояний: {e}")
             self.error.emit(str(e))

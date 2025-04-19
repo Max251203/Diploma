@@ -5,11 +5,9 @@ from core.ha.ws_client import HomeAssistantWSClient
 from core.ha.rest_client import HomeAssistantRestClient
 from core.ha.entity_manager import EntityManager
 from core.ha.device_manager import DeviceManager
-from utils.logger import Logger
+from utils.logger import get_logger
 
 class ConnectionWorker(QThread):
-    """Поток для подключения к Home Assistant"""
-
     connection_success = Signal(object, object, object, object, str)  # ws, rest, entity, device, url
     connection_failed = Signal(str)
     state_changed = Signal(str, dict)
@@ -18,7 +16,7 @@ class ConnectionWorker(QThread):
         super().__init__()
         self.raw_url = raw_url
         self.token = token
-        self.logger = Logger()
+        self.logger = get_logger()
 
     def run(self):
         try:
@@ -29,7 +27,6 @@ class ConnectionWorker(QThread):
 
             ws_client = HomeAssistantWSClient.init(ws_url, self.token)
 
-            # Ждём подключения WebSocket (до 5 сек)
             for _ in range(10):
                 if ws_client.is_connected():
                     break
@@ -43,7 +40,6 @@ class ConnectionWorker(QThread):
             entity_manager = EntityManager(ws_client, rest_client)
             device_manager = DeviceManager(ws_client, entity_manager)
 
-            # Проверка подключения
             def on_devices_loaded(devices):
                 self.logger.success("Подключение и загрузка устройств успешны.")
 
@@ -56,12 +52,7 @@ class ConnectionWorker(QThread):
                     self.state_changed.emit(entity_id, new_state)
 
                 ws_client.subscribe_event("state_changed", on_state_changed)
-
                 self.connection_success.emit(ws_client, rest_client, entity_manager, device_manager, ws_url)
-
-            def on_error(_):
-                self.logger.error("Ошибка при получении устройств.")
-                self.connection_failed.emit("Ошибка при получении устройств.")
 
             ws_client.send_command("config/device_registry/list", callback=on_devices_loaded)
 

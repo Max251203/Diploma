@@ -2,9 +2,11 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
     QListWidgetItem, QScrollArea, QLabel
 )
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Signal, Qt
 from ui.widgets.flow_layout import FlowLayout
 from ui.widgets.device_card import DeviceCard
+
 
 class DevicesPanel(QWidget):
     """Панель отображения устройств по категориям"""
@@ -27,8 +29,15 @@ class DevicesPanel(QWidget):
         self.category_list.setMinimumWidth(180)
         self.category_list.setMaximumWidth(220)
 
+        self.category_icons = {
+            "Датчики": QIcon(":/icon/icons/sensor.png"),
+            "Исполнительные устройства": QIcon(":/icon/icons/actuator.png"),
+            "Системные": QIcon(":/icon/icons/system.png"),
+            "Прочее": QIcon(":/icon/icons/other.png")
+        }
+
         for category in self.categories:
-            item = QListWidgetItem(category)
+            item = QListWidgetItem(self.category_icons[category], category)
             self.category_list.addItem(item)
 
         self.category_list.currentRowChanged.connect(self._on_category_changed)
@@ -85,9 +94,11 @@ class DevicesPanel(QWidget):
 
     def show_loading_indicator(self, message):
         """Показывает индикатор загрузки"""
-        loading_label = QLabel(message)
+        loading_label = QLabel()
         loading_label.setObjectName("loadingLabel")
         loading_label.setAlignment(Qt.AlignCenter)
+        loading_label.setPixmap(QPixmap(":/icon/icons/loading.png"))
+        loading_label.setToolTip(message)
         self.flow_layout.addWidget(loading_label)
 
     def _clear_device_cards(self):
