@@ -324,3 +324,36 @@ QScrollBar::sub-page:vertical {
     background-color: transparent;
     border: none;
 }
+
+QTableWidget {
+    background-color: rgba(0, 0, 0, 0.5);
+    alternate-background-color: rgba(255, 93, 44, 0.05);
+    color: rgb(223, 179, 147);
+    border: 1px solid #ff5e2c;
+    border-radius: 10px;
+}
+QTableView::item:selected {
+    background-color: rgba(255, 93, 44, 0.2);
+    color: rgb(223, 179, 147);
+    border: 1px solid #ff5e2c;
+}
+
+QHeaderView::section {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #ffbc00;
+    padding: 6px;
+    border: 1px solid #ff5e2c;
+}
+
+QComboBox {
+    padding: 2px;
+    min-height: 28px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: rgb(223, 179, 147);
+    border: 1px solid #ff5e2c;
+}
+
+QToolButton {
+    background: transparent;
+    border: none;
+}

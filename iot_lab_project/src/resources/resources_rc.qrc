@@ -17,6 +17,11 @@
     <file>icons/actuator.png</file>
     <file>icons/system.png</file>
     <file>icons/other.png</file>
+
+    <file>icons/eye.png</file>
+    <file>icons/eye_off.png</file>
+
+    <file>icons/user_manage.png</file>
   </qresource>
   <qresource prefix="style">
     <file>style.qss</file>
