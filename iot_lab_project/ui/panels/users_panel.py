@@ -64,22 +64,35 @@ class UsersPanel(QWidget):
         QMessageBox.information(self, "Роль изменена", f"Назначена роль: {new_role}")
 
     def _add_user(self):
-        if UserDialog(mode="add", parent=self).exec() == QDialog.Accepted:
+        dialog = UserDialog(mode="add", parent=self)
+        dialog.user_saved.connect(self._on_user_saved)
+        if dialog.exec() == QDialog.Accepted:
             self._load_users()
 
     def _edit_user(self):
         user = self._get_selected_user()
         if not user:
             return QMessageBox.warning(self, "Ошибка", "Выберите пользователя")
-        if UserDialog(mode="edit", user_data=user, parent=self).exec() == QDialog.Accepted:
+        dialog = UserDialog(mode="edit", user_data=user, parent=self)
+        dialog.user_saved.connect(self._on_user_saved)
+        if dialog.exec() == QDialog.Accepted:
             self._load_users()
+
+    def _on_user_saved(self, user):
+        # Всегда обновлять профиль в главном окне, если это текущий пользователь
+        mainwin = self.parent()
+        if hasattr(mainwin, "update_user_profile") and user["login"] == mainwin.user_data.get("login"):
+            mainwin.update_user_profile(user)
+        # Уведомление об успешном изменении
+        QMessageBox.information(self, "Успех", "Данные пользователя успешно обновлены!")
 
     def _delete_user(self):
         user = self._get_selected_user()
         if not user:
             return QMessageBox.warning(self, "Ошибка", "Выберите пользователя")
-        if user["role"] == "admin":
-            return QMessageBox.warning(self, "Ошибка", "Нельзя удалить администратора")
+        current_login = self.parent().user_data["login"] if hasattr(self.parent(), "user_data") else None
+        if user["login"] == current_login:
+            return QMessageBox.warning(self, "Ошибка", "Нельзя удалить себя")
         if QMessageBox.question(self, "Подтверждение", f"Удалить пользователя: {user['login']}?", QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
             self.db.delete_user(user["id"])
             self._load_users()

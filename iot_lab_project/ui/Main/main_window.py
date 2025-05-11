@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
 
         self._init_ui()
         self._connect_signals()
-        self._setup_user_bar()
+        self._setup_top_panel()
         self._setup_tabs_by_role()
         self._load_connections()
         self._update_connection_status(disconnected=True)
@@ -55,10 +55,29 @@ class MainWindow(QMainWindow):
         self.ui.btnGetDevices.clicked.connect(self._load_devices)
         self.ui.btnConnectSettings.clicked.connect(self._open_connection_settings)
 
-    def _setup_user_bar(self):
+    def _setup_top_panel(self):
+        layout = self.ui.horizontalLayoutTopInfo
+
+        # Сохраняем существующие кнопки подключения и настроек
+        keep_widgets = []
+        for i in range(layout.count()):
+            widget = layout.itemAt(i).widget()
+            if widget and widget.objectName() in ["connectionStatus", "comboConnections", "btnConnectSettings"]:
+                keep_widgets.append(widget)
+
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.setParent(None)
+
+        # Возвращаем кнопки подключения и настроек
+        for w in keep_widgets:
+            layout.addWidget(w)
+
+        # -- Блок пользователя
         name = self.user_data.get("login", "admin") if self.role == "admin" else \
                f"{self.user_data.get('last_name', '')} {self.user_data.get('first_name', '')}".strip()
-
         role_label = {"admin": "Администратор", "teacher": "Преподаватель", "student": "Студент"}.get(self.role, "Пользователь")
 
         self.user_info_btn = QPushButton(f"{name} ({role_label})")
@@ -73,10 +92,22 @@ class MainWindow(QMainWindow):
         logout_btn.setObjectName("logoutButton")
         logout_btn.clicked.connect(self._logout)
 
-        layout = self.ui.horizontalLayoutTopInfo
         layout.addWidget(self.user_info_btn)
         layout.addWidget(separator)
         layout.addWidget(logout_btn)
+
+    def _edit_profile(self):
+        dialog = UserDialog(mode="profile", user_data=self.user_data, parent=self)
+        dialog.user_saved.connect(self.update_user_profile)
+        dialog.exec()
+
+    def update_user_profile(self, user_data):
+        self.user_data = user_data
+        self.role = user_data.get("role", "student")
+        self._setup_top_panel()
+        self._setup_tabs_by_role()
+        self._refresh_logs()
+        QMessageBox.information(self, "Успех", "Данные профиля обновлены!")
 
     def _setup_tabs_by_role(self):
         tab = self.ui.tabWidgetMain
@@ -84,7 +115,8 @@ class MainWindow(QMainWindow):
             tab.removeTab(0)
 
         if self.role == "admin":
-            tab.addTab(UsersPanel(), QIcon(":/icon/icons/user_manage.png"), "Пользователи")
+            users_panel = UsersPanel(parent=self)
+            tab.addTab(users_panel, QIcon(":/icon/icons/user_manage.png"), "Пользователи")
             tab.addTab(self.ui.scrollAreaDevices.parentWidget(), QIcon(":/icon/icons/devices.png"), "Устройства")
         elif self.role in ("teacher", "student"):
             tab.addTab(self._create_labs_stub(), QIcon(":/icon/icons/info.png"), "Лабораторные")
@@ -196,19 +228,29 @@ class MainWindow(QMainWindow):
             self.logger.info(f"[UI] Обновлено: {entity_id} → {new_state.get('state')}")
             self._refresh_logs()
 
-    def _edit_profile(self):
-        dialog = UserDialog(mode="profile", user_data=self.user_data, parent=self)
-        if dialog.exec() == QDialog.Accepted:
-            self.user_data = UserDB().get_user_by_login(self.user_data["login"])
-            QMessageBox.information(self, "Профиль", "Данные обновлены")
-
-    def _logout(self):
-        login_dialog = LoginDialog()
-        if login_dialog.exec() == QDialog.Accepted:
-            self.__init__(user_data=login_dialog.user_data)
-            self.show()
-
     def _refresh_logs(self):
         self.ui.textEditLogs.setHtml(self.logger.get_text_log())
         bar = self.ui.textEditLogs.verticalScrollBar()
         bar.setValue(bar.maximum())
+
+    def _logout(self):
+        login_dialog = LoginDialog()
+        if login_dialog.exec() == QDialog.Accepted:
+            self.user_data = login_dialog.user_data
+            self.role = self.user_data.get("role", "student")
+            
+            # Сброс подключения при смене пользователя 
+            # self.ws_client = None
+            # self.rest_client = None
+            # self.entity_manager = None
+            # self.device_manager = None
+            # self.selected_connection = None
+            # self.entity_widgets = {}
+            # self._update_connection_status(disconnected=True)
+            
+            self._setup_top_panel()
+            self._setup_tabs_by_role()
+            self.logger = get_logger()
+            self._refresh_logs()
+            if hasattr(self, "devices_panel"):
+                self.devices_panel.clear_devices()

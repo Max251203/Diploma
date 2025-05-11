@@ -10,7 +10,7 @@ class LoginDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Вход / Регистрация")
-        self.setFixedSize(400, 460)
+        self.setFixedSize(400, 220)  # Начальная высота только для входа
         self.setObjectName("loginDialog")
 
         self.db = UserDB()
@@ -29,17 +29,18 @@ class LoginDialog(QDialog):
         self.login_edit = QLineEdit(placeholderText="Введите логин")
         self.form.addRow("Логин:", self.login_edit)
 
-        self.password_edit, self.toggle_password_btn = self._create_password_field()
+        self.password_edit, self.toggle_password_btn = self._create_password_field("Введите пароль")
         self.form.addRow("Пароль:", self._wrap_with_icon(self.password_edit, self.toggle_password_btn))
 
-        self.repeat_edit, self.toggle_repeat_btn = self._create_password_field()
-        self.form.addRow("Повтор пароля:", self._wrap_with_icon(self.repeat_edit, self.toggle_repeat_btn))
+        self.repeat_edit, self.toggle_repeat_btn = self._create_password_field("Повторите пароль")
+        self.row_repeat = self._wrap_with_icon(self.repeat_edit, self.toggle_repeat_btn)
+        self.form.addRow("Повтор пароля:", self.row_repeat)
 
         self.lastname_edit = QLineEdit(placeholderText="Введите фамилию")
-        self.firstname_edit = QLineEdit(placeholderText="Введите имя")
-        self.middlename_edit = QLineEdit(placeholderText="Введите отчество")
         self.form.addRow("Фамилия:", self.lastname_edit)
+        self.firstname_edit = QLineEdit(placeholderText="Введите имя")
         self.form.addRow("Имя:", self.firstname_edit)
+        self.middlename_edit = QLineEdit(placeholderText="Введите отчество")
         self.form.addRow("Отчество:", self.middlename_edit)
 
         layout.addLayout(self.form)
@@ -55,9 +56,10 @@ class LoginDialog(QDialog):
         layout.addWidget(self.toggle_mode_btn)
         layout.addStretch()
 
-    def _create_password_field(self):
+    def _create_password_field(self, placeholder=""):
         edit = QLineEdit()
         edit.setEchoMode(QLineEdit.Password)
+        edit.setPlaceholderText(placeholder)
         btn = QToolButton()
         btn.setIcon(QIcon(":/icon/icons/eye.png"))
         btn.setIconSize(QSize(20, 20))
@@ -81,44 +83,48 @@ class LoginDialog(QDialog):
 
     def _toggle_mode(self):
         self._set_register_mode(not self.is_register_mode)
+        self.toggle_mode_btn.clearFocus()
+        self.toggle_mode_btn.setDown(False)
 
     def _set_register_mode(self, register: bool):
         self.is_register_mode = register
 
-        widgets = [
-            (self.repeat_edit, self.toggle_repeat_btn),
-            (self.lastname_edit,),
-            (self.firstname_edit,),
-            (self.middlename_edit,)
-        ]
-        for group in widgets:
-            for w in group:
-                w.setVisible(register)
+        # Показываем/скрываем строки формы
+        self.form.labelForField(self.row_repeat).setVisible(register)
+        self.row_repeat.setVisible(register)
+        self.form.labelForField(self.lastname_edit).setVisible(register)
+        self.lastname_edit.setVisible(register)
+        self.form.labelForField(self.firstname_edit).setVisible(register)
+        self.firstname_edit.setVisible(register)
+        self.form.labelForField(self.middlename_edit).setVisible(register)
+        self.middlename_edit.setVisible(register)
 
         self.submit_btn.setText("Зарегистрироваться" if register else "Войти")
         self.toggle_mode_btn.setText("Уже есть аккаунт" if register else "У меня нет аккаунта")
+        self.setFixedSize(400, 460 if register else 220)
 
     def _on_submit(self):
         login = self.login_edit.text().strip()
         password = self.password_edit.text()
-        if not login or not password:
-            return QMessageBox.warning(self, "Ошибка", "Введите логин и пароль")
-
         if self.is_register_mode:
-            if password != self.repeat_edit.text():
+            repeat = self.repeat_edit.text()
+            last = self.lastname_edit.text().strip()
+            first = self.firstname_edit.text().strip()
+            middle = self.middlename_edit.text().strip()
+            # Проверяем ВСЕ поля
+            if not login or not password or not repeat or not last or not first or not middle:
+                return QMessageBox.warning(self, "Ошибка", "Заполните все поля")
+            if password != repeat:
                 return QMessageBox.warning(self, "Ошибка", "Пароли не совпадают")
-
-            fields = [self.lastname_edit.text().strip(), self.firstname_edit.text().strip(), self.middlename_edit.text().strip()]
-            if not all(fields):
-                return QMessageBox.warning(self, "Ошибка", "Заполните ФИО")
-
             try:
-                self.db.add_user(login, password, *fields)
+                self.db.add_user(login, password, last, first, middle)
                 QMessageBox.information(self, "Успех", "Вы зарегистрированы!")
                 self._set_register_mode(False)
             except ValueError as e:
                 QMessageBox.warning(self, "Ошибка", str(e))
         else:
+            if not login or not password:
+                return QMessageBox.warning(self, "Ошибка", "Введите логин и пароль")
             user = self.db.authenticate_user(login, password)
             if user:
                 self.user_data = user
