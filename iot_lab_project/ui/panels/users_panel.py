@@ -79,11 +79,12 @@ class UsersPanel(QWidget):
             self._load_users()
 
     def _on_user_saved(self, user):
-        # Всегда обновлять профиль в главном окне, если это текущий пользователь
-        mainwin = self.parent()
-        if hasattr(mainwin, "update_user_profile") and user["login"] == mainwin.user_data.get("login"):
+        mainwin = self.window()  # <-- Ключевое исправление
+
+        if hasattr(mainwin, "update_user_profile"):
             mainwin.update_user_profile(user)
-        # Уведомление об успешном изменении
+
+        self._load_users()
         QMessageBox.information(self, "Успех", "Данные пользователя успешно обновлены!")
 
     def _delete_user(self):

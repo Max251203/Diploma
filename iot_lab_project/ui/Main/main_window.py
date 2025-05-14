@@ -58,27 +58,26 @@ class MainWindow(QMainWindow):
     def _setup_top_panel(self):
         layout = self.ui.horizontalLayoutTopInfo
 
-        # Сохраняем существующие кнопки подключения и настроек
-        keep_widgets = []
-        for i in range(layout.count()):
-            widget = layout.itemAt(i).widget()
-            if widget and widget.objectName() in ["connectionStatus", "comboConnections", "btnConnectSettings"]:
-                keep_widgets.append(widget)
-
+        # Удалить все виджеты
         while layout.count():
             item = layout.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.setParent(None)
 
-        # Возвращаем кнопки подключения и настроек
-        for w in keep_widgets:
-            layout.addWidget(w)
+        # === Снова добавить подключение и настройки ===
+        layout.addWidget(self.ui.connectionStatus)
+        layout.addWidget(self.ui.comboConnections)
+        layout.addWidget(self.ui.btnConnectSettings)
 
-        # -- Блок пользователя
+        # === Блок пользователя ===
         name = self.user_data.get("login", "admin") if self.role == "admin" else \
-               f"{self.user_data.get('last_name', '')} {self.user_data.get('first_name', '')}".strip()
-        role_label = {"admin": "Администратор", "teacher": "Преподаватель", "student": "Студент"}.get(self.role, "Пользователь")
+            f"{self.user_data.get('last_name', '')} {self.user_data.get('first_name', '')}".strip()
+        role_label = {
+            "admin": "Администратор",
+            "teacher": "Преподаватель",
+            "student": "Студент"
+        }.get(self.role, "Пользователь")
 
         self.user_info_btn = QPushButton(f"{name} ({role_label})")
         self.user_info_btn.setFlat(True)
@@ -102,12 +101,12 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def update_user_profile(self, user_data):
-        self.user_data = user_data
-        self.role = user_data.get("role", "student")
-        self._setup_top_panel()
-        self._setup_tabs_by_role()
-        self._refresh_logs()
-        QMessageBox.information(self, "Успех", "Данные профиля обновлены!")
+        if user_data["id"] == self.user_data.get("id"):
+            self.user_data = user_data
+            self.role = user_data.get("role", "student")
+            self._setup_top_panel()
+            self._setup_tabs_by_role()
+            self._refresh_logs()
 
     def _setup_tabs_by_role(self):
         tab = self.ui.tabWidgetMain

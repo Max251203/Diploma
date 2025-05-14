@@ -10,7 +10,7 @@ class LoginDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Вход / Регистрация")
-        self.setFixedSize(400, 220)  # Начальная высота только для входа
+        self.setFixedSize(400, 220) 
         self.setObjectName("loginDialog")
 
         self.db = UserDB()
@@ -89,7 +89,6 @@ class LoginDialog(QDialog):
     def _set_register_mode(self, register: bool):
         self.is_register_mode = register
 
-        # Показываем/скрываем строки формы
         self.form.labelForField(self.row_repeat).setVisible(register)
         self.row_repeat.setVisible(register)
         self.form.labelForField(self.lastname_edit).setVisible(register)
@@ -111,7 +110,7 @@ class LoginDialog(QDialog):
             last = self.lastname_edit.text().strip()
             first = self.firstname_edit.text().strip()
             middle = self.middlename_edit.text().strip()
-            # Проверяем ВСЕ поля
+            
             if not login or not password or not repeat or not last or not first or not middle:
                 return QMessageBox.warning(self, "Ошибка", "Заполните все поля")
             if password != repeat:
