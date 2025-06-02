@@ -1,7 +1,9 @@
-from PySide6.QtWidgets import QMainWindow, QPushButton, QFrame, QMessageBox, QDialog
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import QSize
+# ui/Main/main_window.py
 
+from PySide6.QtWidgets import (
+    QMainWindow, QPushButton, QFrame, QDialog, QMessageBox
+)
+from PySide6.QtGui import QIcon
 from ui.Main.main_ui import Ui_MainWindow
 from ui.dialogs.login_dialog import LoginDialog
 from ui.dialogs.user_dialog import UserDialog
@@ -15,6 +17,8 @@ from db.users_db import UserDB
 from core.logger import get_logger
 from core.workers.connection_worker import ConnectionWorker
 from core.workers.device_loader import DeviceLoader
+from core.permissions import has_permission, Permission
+
 
 class MainWindow(QMainWindow):
     def __init__(self, user_data=None):
@@ -30,6 +34,8 @@ class MainWindow(QMainWindow):
         self.device_manager = None
         self.selected_connection = None
         self.entity_widgets = {}
+
+        self._last_tabbar_state = None  # хранит показан ли текст
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -55,31 +61,40 @@ class MainWindow(QMainWindow):
         self.ui.btnGetDevices.clicked.connect(self._load_devices)
         self.ui.btnConnectSettings.clicked.connect(self._open_connection_settings)
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+        w = self.width()
+        tabbar = self.ui.tabWidgetMain.tabBar()
+
+        if w < 700 and self._last_tabbar_state != "ICON_ONLY":
+            for i in range(tabbar.count()):
+                tooltip = tabbar.tabText(i)
+                tabbar.setTabToolTip(i, tooltip)
+                tabbar.setTabText(i, "")
+            self._last_tabbar_state = "ICON_ONLY"
+
+        elif w >= 700 and self._last_tabbar_state != "FULL":
+            for i in range(tabbar.count()):
+                label = self.ui.tabWidgetMain.tabToolTip(i)
+                if label:
+                    tabbar.setTabText(i, label)
+            self._last_tabbar_state = "FULL"
+
     def _setup_top_panel(self):
         layout = self.ui.horizontalLayoutTopInfo
 
-        # Удалить все виджеты
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.setParent(None)
+        # Удаляем только дополнительно созданные виджеты
+        keep = {"connectionStatus", "comboConnections", "btnConnectSettings"}
+        for i in reversed(range(layout.count())):
+            item = layout.itemAt(i)
+            w = item.widget()
+            if w and w.objectName() not in keep:
+                layout.removeWidget(w)
+                w.deleteLater()
 
-        # === Снова добавить подключение и настройки ===
-        layout.addWidget(self.ui.connectionStatus)
-        layout.addWidget(self.ui.comboConnections)
-        layout.addWidget(self.ui.btnConnectSettings)
-
-        # === Блок пользователя ===
-        name = self.user_data.get("login", "admin") if self.role == "admin" else \
-            f"{self.user_data.get('last_name', '')} {self.user_data.get('first_name', '')}".strip()
-        role_label = {
-            "admin": "Администратор",
-            "teacher": "Преподаватель",
-            "student": "Студент"
-        }.get(self.role, "Пользователь")
-
-        self.user_info_btn = QPushButton(f"{name} ({role_label})")
+        name = self.user_data.get("login", "Пользователь")
+        self.user_info_btn = QPushButton(f"{name}")
         self.user_info_btn.setFlat(True)
         self.user_info_btn.clicked.connect(self._edit_profile)
 
@@ -113,15 +128,17 @@ class MainWindow(QMainWindow):
         while tab.count():
             tab.removeTab(0)
 
-        if self.role == "admin":
-            users_panel = UsersPanel(parent=self)
-            tab.addTab(users_panel, QIcon(":/icon/icons/user_manage.png"), "Пользователи")
-            tab.addTab(self.ui.scrollAreaDevices.parentWidget(), QIcon(":/icon/icons/devices.png"), "Устройства")
-        elif self.role in ("teacher", "student"):
+        if has_permission(self.role, Permission.MANAGE_USERS):
+            tab.addTab(UsersPanel(parent=self), QIcon(":/icon/icons/user_manage.png"), "Пользователи")
+
+        if has_permission(self.role, Permission.ACCESS_LABS):
             tab.addTab(self._create_labs_stub(), QIcon(":/icon/icons/info.png"), "Лабораторные")
+
+        if has_permission(self.role, Permission.ACCESS_DEVICES):
             tab.addTab(self.ui.scrollAreaDevices.parentWidget(), QIcon(":/icon/icons/devices.png"), "Устройства")
 
-        tab.addTab(self.ui.tabLogs, QIcon(":/icon/icons/log.png"), "Журнал")
+        if has_permission(self.role, Permission.VIEW_LOGS):
+            tab.addTab(self.ui.tabLogs, QIcon(":/icon/icons/log.png"), "Журнал")
 
     def _create_labs_stub(self):
         from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
@@ -133,7 +150,6 @@ class MainWindow(QMainWindow):
     def _load_connections(self):
         current_id = self.selected_connection["id"] if self.selected_connection else None
         connections = self.db.get_all_connections()
-
         self.ui.comboConnections.clear()
         for index, conn in enumerate(connections):
             self.ui.comboConnections.addItem(conn["name"], conn)
@@ -195,7 +211,6 @@ class MainWindow(QMainWindow):
 
         self.logger.info("Загрузка устройств...")
         self._refresh_logs()
-
         self.devices_panel.clear_devices()
         self.devices_panel.show_loading_indicator("Загрузка устройств...")
 
@@ -236,17 +251,7 @@ class MainWindow(QMainWindow):
         login_dialog = LoginDialog()
         if login_dialog.exec() == QDialog.Accepted:
             self.user_data = login_dialog.user_data
-            self.role = self.user_data.get("role", "student")
-            
-            # Сброс подключения при смене пользователя 
-            # self.ws_client = None
-            # self.rest_client = None
-            # self.entity_manager = None
-            # self.device_manager = None
-            # self.selected_connection = None
-            # self.entity_widgets = {}
-            # self._update_connection_status(disconnected=True)
-            
+            self.role = login_dialog.user_data.get("role", "student")
             self._setup_top_panel()
             self._setup_tabs_by_role()
             self.logger = get_logger()

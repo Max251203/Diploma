@@ -1,6 +1,6 @@
 /* === ГЛОБАЛЬНЫЕ СТИЛИ === */
 * {
-    color:rgb(223, 179, 147);
+    color: rgb(223, 179, 147);
     font-family: "MS Shell Dlg 2";
 }
 *:focus {
@@ -26,12 +26,6 @@ QLabel {
     min-height: 28px;
     background-color: transparent;
     font-size: 10pt;
-}
-
-#connectionStatus {
-    background: transparent;
-    font-weight: bold;
-    max-width: 150px;
 }
 
 /* === QLineEdit === */
@@ -64,14 +58,59 @@ QPushButton {
     font-size: 11pt;
     icon-size: 24px 24px;
 }
-
 QPushButton:hover,
 QPushButton:pressed {
     background-color: rgba(255, 93, 44, 0.1); 
     color: #ff5e2c; 
 }
 
-/* === QListWidget и QListView::item === */
+/* === Панель подключения === */
+#connectionStatus {
+    background: transparent;
+    font-weight: bold;
+    max-width: 150px;
+}
+#topButtonPanel {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #ff5e2c;
+    border-radius: 10px;
+    padding: 6px;
+    margin-top: 5px;
+}
+
+/* === QComboBox === */
+QComboBox {
+    padding: 2px;
+    min-height: 30px;
+    min-width: 150px;
+    border: 1px solid #ff5e2c;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: rgb(223, 179, 147);
+}
+QComboBox::drop-down {
+    border: 0;
+}
+QComboBox::down-arrow {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #ff5e2c;
+    margin-right: 15px;
+}
+QComboBox QListView {
+    border: 1px solid #ff5e2c;
+    padding: 5px;
+    background-color: #1a1a1a;
+    color: rgb(223, 179, 147);
+}
+/* === ComboBox в таблице === */
+QTableWidget QComboBox {
+    margin: 1px;
+    padding: 1px;
+    min-height: 26px;
+}
+
+/* === QListWidget (категории) === */
 QListWidget {
     padding: 5px;
     border: 1px solid #ff5e2c;
@@ -92,99 +131,20 @@ QListView::item:hover {
 QListView::item:selected {
     border: 1px solid #ff5e2c;
     background-color: rgba(255, 93, 44, 0.2);
-    color:rgb(223, 179, 147);
+    color: rgb(223, 179, 147);
 }
-
-/* === Список категорий === */
 #categoryList {
     outline: none;
 }
 #categoryList::item {
     border-bottom: 1px solid rgba(255, 93, 44, 0.3);
 }
-#categoryList::item:hover {
-    background-color: rgba(255, 93, 44, 0.1);
-    color: #ff5e2c;
-}
 
-/* === QComboBox === */
-QComboBox {
-    padding: 2px;
-    min-height: 30px;
-    min-width: 150px;
-    border-top: 1px solid #ff5e2c;
-    border-left: 1px solid #ff5e2c;
-    border-bottom: 1px solid #992d1a;
-    border-right: 1px solid #992d1a;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 0px;
-    color:rgb(223, 179, 147);
-}
-QComboBox::drop-down {
-    border: 0px;
-    border-radius: 0px;
-}
-QComboBox::down-arrow {
-    width: 12px;
-    height: 12px;
-    border: 1px solid #ff5e2c;
-    margin-right: 15px;
-}
-QComboBox QListView {
-    font-size: 12px;
-    border: 1px solid #ff5e2c;
-    padding: 5px;
-    background-color: #1a1a1a;
-    color:rgb(223, 179, 147);
-}
-
-/* === QTabWidget === */
-QTabWidget {
-    min-height: 400px;
-}
-QTabWidget::pane {
-    border: 1px solid #ff5e2c;
-    border-radius: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-QTabWidget::tab-bar {
-    left: 20px;
-}
-QTabBar::tab {
-    min-height: 40px;
-    min-width: 220px;
-    background: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid #ff5e2c;
-    border-left: 1px solid #ff5e2c;
-    border-bottom: 1px solid #992d1a;
-    border-right: 1px solid #992d1a;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    padding: 4px;
-    font: 11pt "Bahnschrift Condensed";
-    qproperty-iconSize: 24px 24px;
-    margin-right: 5px;
-}
-QTabBar::tab:!selected {
-    margin-top: 5px;
-}
-QTabBar::tab:selected {
-    background-color: rgba(60, 60, 60, 0.7);
-    margin-bottom: -1px;
-    color: #ff5e2c;
-}
-
-/* === QScrollArea === */
-QScrollArea {
+/* === QScrollArea + ScrollBar === */
+QScrollArea, QScrollArea > QWidget > QWidget {
     background-color: transparent;
     border: none;
 }
-QScrollArea > QWidget > QWidget {
-    background-color: transparent;
-    border: none;
-}
-
-/* === QScrollBar === */
 QScrollBar:vertical {
     border: 1px solid #ff5e2c;
     background: transparent;
@@ -212,7 +172,61 @@ QScrollBar::sub-page:vertical {
     background: none;
 }
 
-/* === QTextEdit (логи) === */
+/* === QTabWidget + Адаптивные вкладки === */
+QTabWidget::pane {
+    border: 1px solid #ff5e2c;
+    border-radius: 10px;
+}
+QTabWidget::tab-bar {
+    alignment: left;
+}
+QTabBar::tab {
+    padding: 6px;
+    font-size: 11pt;
+    text-align: center;
+    qproperty-iconSize: 24px 24px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #ff5e2c;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin-right: 5px;
+}
+QTabBar::tab:!selected {
+    margin-top: 5px;
+}
+QTabBar::tab:selected {
+    background-color: rgba(60, 60, 60, 0.7);
+    margin-bottom: -1px;
+    color: #ff5e2c;
+}
+
+/* === QTableWidget (стиль выделения) === */
+QTableWidget {
+    background-color: rgba(0, 0, 0, 0.5);
+    alternate-background-color: rgba(255, 93, 44, 0.05);
+    color: rgb(223, 179, 147);
+    border: 1px solid #ff5e2c;
+}
+QTableView {
+    selection-background-color: transparent;
+    selection-color: #ff5e2c;
+}
+QTableView::item:selected {
+    background-color: rgba(255, 93, 44, 0.2);
+    color: #ff5e2c;
+}
+QTableView::item:focus {
+    outline: none;
+    background-color: rgba(255, 93, 44, 0.2);
+}
+QHeaderView::section {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #ffbc00;
+    padding: 6px;
+    border: 1px solid #ff5e2c;
+}
+
+/* === Текстовое поле (журнал) === */
 #textEditLogs {
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid #ff5e2c;
@@ -220,29 +234,16 @@ QScrollBar::sub-page:vertical {
     font: 10pt "Consolas";
 }
 
-/* === Панель кнопок === */
-#topButtonPanel {
+/* === Блоки — устройства, сущности === */
+#devicesBox, #entitiesBox, #deviceInfo {
     background-color: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid #ff5e2c;
-    border-left: 1px solid #ff5e2c;
-    border-bottom: 1px solid #992d1a;
-    border-right: 1px solid #992d1a;
-    border-radius: 10px;
-}
-
-/* === Панели устройств и сущностей === */
-#devicesBox, #entitiesBox {
-    background-color: rgba(0, 0, 0, 0);
-    border-top: 1px solid #ff5e2c;
-    border-left: 1px solid #ff5e2c;
-    border-bottom: 1px solid #992d1a;
-    border-right: 1px solid #992d1a;
+    border: 1px solid #ff5e2c;
     border-radius: 10px;
     margin: 5px;
     padding: 5px;
 }
 
-/* === КАРТОЧКА УСТРОЙСТВА === */
+/* === Карточка устройства === */
 #deviceCard {
     border-radius: 10px;
     padding: -4px;
@@ -253,25 +254,19 @@ QScrollBar::sub-page:vertical {
         stop:1 #ff0058
     );
 }
-
-/* Внутренний стиль карточки */
 #deviceInner {
     background-color: rgba(0, 0, 0, 0.9);
     border-radius: 7px;
 }
-
-#deviceInner:hover{
+#deviceInner:hover {
     background-color: rgba(0, 0, 0, 0.7);
     color: #ff5e2c;
 }
 
-/* === Виджет сущности === */
+/* === Виджеты сущностей === */
 #entityItem {
     background-color: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid #ff5e2c;
-    border-left: 1px solid #ff5e2c;
-    border-bottom: 1px solid #992d1a;
-    border-right: 1px solid #992d1a;
+    border: 1px solid #ff5e2c;
     border-radius: 10px;
     margin: 5px;
     padding: 10px;
@@ -287,7 +282,7 @@ QScrollBar::sub-page:vertical {
     color: #ffbc00;
 }
 
-/* === Кнопки управления сущностями === */
+/* === Кнопки управлений сущностью === */
 #btnEntityOn {
     background-color: rgba(60, 30, 0, 0.5);
 }
@@ -305,18 +300,7 @@ QScrollBar::sub-page:vertical {
     color: #ff5e2c;
 }
 
-/* === Панель описания устройства === */
-#deviceInfo {
-    background-color: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid #ff5e2c;
-    border-left: 1px solid #ff5e2c;
-    border-bottom: 1px solid #992d1a;
-    border-right: 1px solid #992d1a;
-    border-radius: 10px;
-    padding: 5px;
-}
-
-/* === Индикатор загрузки === */
+/* === Лоадер === */
 #loadingLabel {
     font-weight: bold;
     color: #ffbc00;
@@ -325,26 +309,18 @@ QScrollBar::sub-page:vertical {
     border: none;
 }
 
-QTableWidget {
-    background-color: rgba(0, 0, 0, 0.5);
-    alternate-background-color: rgba(255, 93, 44, 0.05);
-    color: rgb(223, 179, 147);
-    border: 1px solid #ff5e2c;
-}
-QTableView::item:selected {
-    background-color: rgba(255, 93, 44, 0.2);
-    color: #ff5e2c;
-    border: 1px solid #ff5e2c;
-}
-
-QHeaderView::section {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #ffbc00;
-    padding: 6px;
-    border: 1px solid #ff5e2c;
-}
-
+/* === ToolButton (глаз/показать пароль) === */
 QToolButton {
     background: transparent;
     border: none;
+}
+
+/* === QToolTip === */
+QToolTip {
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #ffbc00;
+    border: 1px solid #ff5e2c;
+    padding: 6px;
+    border-radius: 5px;
+    font: 9pt "Consolas";
 }

@@ -1,7 +1,10 @@
+# db/users_db.py
+
 import sqlite3
 import bcrypt
 from typing import Optional, List, Dict
 from db.init_db import get_db_path
+from core.permissions import get_all_roles
 
 class UserDB:
     def __init__(self):
@@ -17,12 +20,15 @@ class UserDB:
                 last_name TEXT,
                 first_name TEXT,
                 middle_name TEXT,
-                role TEXT NOT NULL CHECK(role IN ('student', 'teacher', 'admin'))
+                role TEXT NOT NULL
             )
         """)
         self.conn.commit()
 
     def add_user(self, login, password, last_name, first_name, middle_name, role="student"):
+        if role not in get_all_roles():
+            raise ValueError("Недопустимая роль")
+
         if self.get_user_by_login(login):
             raise ValueError("Пользователь с таким логином уже существует")
 
@@ -34,6 +40,9 @@ class UserDB:
         self.conn.commit()
 
     def update_user_info(self, user_id, login, last_name, first_name, middle_name, new_password=None, role=None):
+        if role and role not in get_all_roles():
+            raise ValueError("Недопустимая роль")
+
         existing = self.get_user_by_login(login)
         if existing and existing["id"] != user_id:
             raise ValueError("Пользователь с таким логином уже существует")
@@ -61,15 +70,15 @@ class UserDB:
         return None
 
     def get_user_by_login(self, login: str) -> Optional[Dict]:
-        cur = self.conn.cursor()
-        cur.execute("SELECT * FROM users WHERE login = ?", (login,))
-        row = cur.fetchone()
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE login = ?", (login,))
+        row = cursor.fetchone()
         return self._row_to_dict(row) if row else None
 
     def get_user_by_id(self, user_id: int) -> Optional[Dict]:
-        cur = self.conn.cursor()
-        cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        row = cur.fetchone()
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = cursor.fetchone()
         return self._row_to_dict(row) if row else None
 
     def get_all_users(self) -> List[Dict]:
@@ -92,6 +101,8 @@ class UserDB:
         self.conn.commit()
 
     def update_user_role(self, user_id: int, new_role: str):
+        if new_role not in get_all_roles():
+            raise ValueError("Недопустимая роль")
         self.conn.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
         self.conn.commit()
 

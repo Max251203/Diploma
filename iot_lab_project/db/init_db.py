@@ -1,25 +1,27 @@
+# db/init_db.py
+
 import os
 import sqlite3
 import bcrypt
+from core.permissions import RoleEnum
 
 DB_NAME = "iot_lab_data.db"
 
 def get_db_path() -> str:
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources"))
     os.makedirs(base_dir, exist_ok=True)
-    db_path = os.path.join(base_dir, DB_NAME)
+    path = os.path.join(base_dir, DB_NAME)
 
-    if not os.path.exists(db_path):
-        open(db_path, "a").close()
-        initialize_database(db_path)
+    if not os.path.exists(path):
+        open(path, "a").close()
+        initialize_database(path)
 
-    return db_path
+    return path
 
 def initialize_database(db_path: str):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # Таблица подключений к Home Assistant
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ha_connections (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +31,6 @@ def initialize_database(db_path: str):
         )
     """)
 
-    # Таблица пользователей
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,18 +39,18 @@ def initialize_database(db_path: str):
             last_name TEXT,
             first_name TEXT,
             middle_name TEXT,
-            role TEXT NOT NULL CHECK(role IN ('student', 'teacher', 'admin'))
+            role TEXT NOT NULL
         )
     """)
 
-    # Добавление администратора по умолчанию
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+    # Система ролей без хардкода
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = ?", (RoleEnum.ADMIN.value,))
     if cursor.fetchone()[0] == 0:
         hashed = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
         cursor.execute("""
             INSERT INTO users (login, password_hash, role)
             VALUES (?, ?, ?)
-        """, ("admin", hashed, "admin"))
+        """, ("admin", hashed, RoleEnum.ADMIN.value))
 
     conn.commit()
     conn.close()
