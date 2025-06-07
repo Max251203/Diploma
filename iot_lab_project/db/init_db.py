@@ -1,5 +1,3 @@
-# db/init_db.py
-
 import os
 import sqlite3
 import bcrypt
@@ -22,6 +20,7 @@ def initialize_database(db_path: str):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
+    # Таблица для соединений Home Assistant
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ha_connections (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +30,17 @@ def initialize_database(db_path: str):
         )
     """)
 
+    # 💡 Таблица для кастомных API соединений
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS custom_api_connections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            url TEXT NOT NULL,
+            api_key TEXT NOT NULL
+        )
+    """)
+
+    # Таблица пользователей
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +53,7 @@ def initialize_database(db_path: str):
         )
     """)
 
-    # Система ролей без хардкода
+    # Администратор по умолчанию
     cursor.execute("SELECT COUNT(*) FROM users WHERE role = ?", (RoleEnum.ADMIN.value,))
     if cursor.fetchone()[0] == 0:
         hashed = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()

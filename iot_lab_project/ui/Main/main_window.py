@@ -1,5 +1,3 @@
-# ui/Main/main_window.py
-
 from PySide6.QtWidgets import (
     QMainWindow, QPushButton, QFrame, QDialog, QMessageBox
 )
@@ -18,6 +16,7 @@ from core.logger import get_logger
 from core.workers.connection_worker import ConnectionWorker
 from core.workers.device_loader import DeviceLoader
 from core.permissions import has_permission, Permission
+import requests
 
 
 class MainWindow(QMainWindow):
@@ -35,7 +34,7 @@ class MainWindow(QMainWindow):
         self.selected_connection = None
         self.entity_widgets = {}
 
-        self._last_tabbar_state = None  # хранит показан ли текст
+        self._last_tabbar_state = None
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -63,7 +62,6 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-
         w = self.width()
         tabbar = self.ui.tabWidgetMain.tabBar()
 
@@ -84,7 +82,7 @@ class MainWindow(QMainWindow):
     def _setup_top_panel(self):
         layout = self.ui.horizontalLayoutTopInfo
 
-        # Удаляем только дополнительно созданные виджеты
+        # Оставляем только нужные виджеты
         keep = {"connectionStatus", "comboConnections", "btnConnectSettings"}
         for i in reversed(range(layout.count())):
             item = layout.itemAt(i)
@@ -148,13 +146,14 @@ class MainWindow(QMainWindow):
         return w
 
     def _load_connections(self):
-        current_id = self.selected_connection["id"] if self.selected_connection else None
-        connections = self.db.get_all_connections()
         self.ui.comboConnections.clear()
-        for index, conn in enumerate(connections):
-            self.ui.comboConnections.addItem(conn["name"], conn)
-            if conn["id"] == current_id:
-                self.ui.comboConnections.setCurrentIndex(index)
+        ha = self.db.get_all_connections()
+        api = self.db.get_all_custom_api_connections()
+
+        for conn in ha:
+            self.ui.comboConnections.addItem(f"{conn['name']} [HA]", {"type": "ha", **conn})
+        for conn in api:
+            self.ui.comboConnections.addItem(f"{conn['name']} [API]", {"type": "api", **conn})
 
     def _open_connection_settings(self):
         if ConnectionDialog(self).exec() == QDialog.Accepted:
@@ -163,21 +162,48 @@ class MainWindow(QMainWindow):
     def _connect_to_selected(self):
         index = self.ui.comboConnections.currentIndex()
         conn_data = self.ui.comboConnections.itemData(index)
-        if not conn_data:
+        if not conn_data or not isinstance(conn_data, dict):
             QMessageBox.warning(self, "Ошибка", "Выберите подключение.")
             return
 
         self.selected_connection = conn_data
-        self._update_connection_status(icon="loading", tooltip="Подключение...")
-        self.logger.info("Подключение к Home Assistant...")
-        self._refresh_logs()
+        conn_type = conn_data.get("type")
 
-        worker = ConnectionWorker(conn_data["url"], conn_data["token"])
-        worker.connection_success.connect(self._on_connected)
-        worker.connection_failed.connect(self._on_connection_error)
-        worker.state_changed.connect(self._on_entity_state_changed)
-        worker.start()
-        self.connection_worker = worker
+        if conn_type == "ha":
+            self._update_connection_status(icon="loading", tooltip="Подключение к Home Assistant...")
+            self.logger.info("Подключение к Home Assistant...")
+            self._refresh_logs()
+
+            worker = ConnectionWorker(conn_data["url"], conn_data["token"])
+            worker.connection_success.connect(self._on_connected)
+            worker.connection_failed.connect(self._on_connection_error)
+            worker.state_changed.connect(self._on_entity_state_changed)
+            worker.start()
+            self.connection_worker = worker
+
+        elif conn_type == "api":
+            self._update_connection_status(icon="loading", tooltip="Подключение к FastAPI серверу...")
+            self.logger.info("Подключение к FastAPI серверу...")
+            self._refresh_logs()
+
+            try:
+                res = requests.get(f'{conn_data["url"].rstrip("/")}/ping',
+                                   headers={"x-api-key": conn_data["api_key"]},
+                                   timeout=3)
+                if res.ok:
+                    self._update_connection_status(success=True)
+                    self.logger.success("Успешное подключение к API серверу.")
+                else:
+                    raise Exception(f"Status: {res.status_code}")
+            except Exception as e:
+                self._update_connection_status(disconnected=True)
+                self.logger.error(f"Ошибка подключения к API: {e}")
+
+            self._refresh_logs()
+
+        else:
+            QMessageBox.warning(self, "Ошибка", "Неизвестный тип подключения")
+            self._update_connection_status(disconnected=True)
 
     def _on_connected(self, ws, rest, entity, device, url):
         self.ws_client, self.rest_client = ws, rest
