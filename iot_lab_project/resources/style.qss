@@ -64,18 +64,88 @@ QPushButton:pressed {
     color: #ff5e2c; 
 }
 
-/* === Панель подключения === */
-#connectionStatus {
+/* === КНОПКА ПРОФИЛЯ === */
+QPushButton#btnProfileLabel { /* 🔧 */
+    border: none;
     background: transparent;
     font-weight: bold;
-    max-width: 150px;
+    color: #ffbc00;
+    padding-left: 10px;
 }
-#topButtonPanel {
-    background-color: rgba(0, 0, 0, 0.5);
+
+/* === ИКОНКИ ВВЕРХУ (QToolButton) === */
+QToolButton { /* 🔧 */
+    background-color: transparent;
+    border: none;
+    padding: 4px;
+}
+QToolButton:hover { /* 🔧 */
+    background-color: rgba(255, 93, 44, 0.2);
+    border: none;
+}
+
+/* === Верхняя панель === */
+QFrame#topPanel {
+    background-color: rgba(10, 10, 10, 0.6);
     border: 1px solid #ff5e2c;
     border-radius: 10px;
-    padding: 6px;
-    margin-top: 5px;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+/* === Статус подключения === */
+#connectionStatusLabel {
+    font-weight: bold;
+    color: #ffbc00;
+    background-color: transparent;
+    min-height: 30px;
+    max-height: 30px;
+}
+
+#connectionStatusText {
+    font-weight: bold;
+    color: #ff5e2c;
+    background-color: transparent;
+    min-height: 30px;
+    max-height: 30px;
+    min-width: 120px;
+    max-width: 120px;
+    text-align: left;
+}
+
+/* === QComboBox === */
+QComboBox {
+    padding: 2px;
+    min-height: 30px;
+    min-width: 200px;
+    border: 1px solid #ff5e2c;
+    border-radius: 0px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: rgb(223, 179, 147);
+}
+
+/* === Кнопки в верхней панели === */
+QFrame#topPanel QToolButton {
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+QFrame#topPanel QToolButton:hover {
+    background-color: rgba(255, 93, 44, 0.2);
+}
+
+/* Выравнивание всех элементов в верхней панели */
+QFrame#topPanel QToolButton,
+QFrame#topPanel QComboBox,
+QFrame#topPanel QLabel,
+QFrame#topPanel QPushButton {
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
 }
 
 /* === QComboBox === */
@@ -84,7 +154,7 @@ QComboBox {
     min-height: 30px;
     min-width: 150px;
     border: 1px solid #ff5e2c;
-    border-radius: 5px;
+    border-radius: 0px; /* Убираем скругление */
     background-color: rgba(0, 0, 0, 0.5);
     color: rgb(223, 179, 147);
 }
@@ -108,6 +178,7 @@ QTableWidget QComboBox {
     margin: 1px;
     padding: 1px;
     min-height: 26px;
+    border-radius: 0px; /* Убираем скругление */
 }
 
 /* === QListWidget (категории) === */
@@ -172,10 +243,10 @@ QScrollBar::sub-page:vertical {
     background: none;
 }
 
-/* === QTabWidget + Адаптивные вкладки === */
+/* === QTabWidget + ВКЛАДКИ === */
 QTabWidget::pane {
     border: 1px solid #ff5e2c;
-    border-radius: 10px;
+    border-radius: 0px; /* 🔧 убрано скругление основной области */
 }
 QTabWidget::tab-bar {
     alignment: left;
@@ -205,7 +276,7 @@ QTableWidget {
     background-color: rgba(0, 0, 0, 0.5);
     alternate-background-color: rgba(255, 93, 44, 0.05);
     color: rgb(223, 179, 147);
-    border: 1px solid #ff5e2c;
+        border: 1px solid #ff5e2c;
 }
 QTableView {
     selection-background-color: transparent;
@@ -309,13 +380,7 @@ QHeaderView::section {
     border: none;
 }
 
-/* === ToolButton (глаз/показать пароль) === */
-QToolButton {
-    background: transparent;
-    border: none;
-}
-
-/* === QToolTip === */
+/* === ToolTip === */
 QToolTip {
     background-color: rgba(0, 0, 0, 0.85);
     color: #ffbc00;

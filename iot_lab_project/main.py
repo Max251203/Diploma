@@ -3,11 +3,13 @@ from PySide6.QtCore import QFile, QTextStream
 from ui.dialogs.login_dialog import LoginDialog
 from ui.Main.main_window import MainWindow
 
+
 def load_stylesheet():
     file = QFile(":/style/style.qss")
     if file.open(QFile.ReadOnly | QFile.Text):
         return QTextStream(file).readAll()
     return ""
+
 
 if __name__ == "__main__":
     app = QApplication([])

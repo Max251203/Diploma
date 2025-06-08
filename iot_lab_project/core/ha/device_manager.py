@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Callable
 from core.ha.entity_manager import EntityManager
 from core.ha.ws_client import HomeAssistantWSClient
 
+
 class DeviceManager:
     """Менеджер устройств Home Assistant"""
 
@@ -32,7 +33,8 @@ class DeviceManager:
 
             callback(physical_devices)
 
-        self.ws.send_command("config/device_registry/list", callback=on_devices_loaded)
+        self.ws.send_command("config/device_registry/list",
+                             callback=on_devices_loaded)
 
     def get_categorized_devices(self, callback: Callable[[Dict[str, List[Dict[str, Any]]]], None]):
         def on_devices(devices):
@@ -58,7 +60,8 @@ class DeviceManager:
         manufacturer = (device.get("manufacturer") or "").lower()
         full_name = f"{manufacturer} {model}".lower()
 
-        known_actuators = ["xiaomi mi air", "xiaomi air purifier", "mi air purifier"]
+        known_actuators = ["xiaomi mi air",
+                           "xiaomi air purifier", "mi air purifier"]
         if any(k in full_name or k in name for k in known_actuators):
             return "Исполнительные устройства"
 

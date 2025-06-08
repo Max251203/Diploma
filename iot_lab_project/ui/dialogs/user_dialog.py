@@ -23,7 +23,8 @@ class UserDialog(QDialog):
 
         self._parent_user = self._find_current_user()
         self._is_self_edit = (
-            self.mode == "edit" and self.user_data.get("id") == self._parent_user.get("id")
+            self.mode == "edit" and self.user_data.get(
+                "id") == self._parent_user.get("id")
         )
 
         self._build_ui()
@@ -67,15 +68,19 @@ class UserDialog(QDialog):
         self.form.addRow("Отчество:", self.middlename_edit)
 
         self.password_edit, self.toggle_btn = self._create_password_field()
-        self.password_edit.setPlaceholderText("Введите пароль" if self.mode == "add" else "Новый пароль (необязательно)")
+        self.password_edit.setPlaceholderText(
+            "Введите пароль" if self.mode == "add" else "Новый пароль (необязательно)")
         self.password_edit.textChanged.connect(self._update_save_button_state)
-        self.form.addRow("Пароль:", self._wrap_with_icon(self.password_edit, self.toggle_btn))
+        self.form.addRow("Пароль:", self._wrap_with_icon(
+            self.password_edit, self.toggle_btn))
 
         if self.mode != "profile" and not self._is_self_edit:
             self.role_combo = QComboBox()
             self.role_combo.addItems(get_all_roles())
-            self.role_combo.currentTextChanged.connect(self._update_save_button_state)
-            self.role_combo.currentTextChanged.connect(self._update_placeholders)
+            self.role_combo.currentTextChanged.connect(
+                self._update_save_button_state)
+            self.role_combo.currentTextChanged.connect(
+                self._update_placeholders)
             self.form.addRow("Роль:", self.role_combo)
         else:
             self.role_combo = None
@@ -93,12 +98,14 @@ class UserDialog(QDialog):
         btn.setIcon(QIcon(":/icon/icons/eye.png"))
         btn.setIconSize(QSize(20, 20))
         btn.setCheckable(True)
-        btn.toggled.connect(lambda checked: self._toggle_password_visibility(edit, btn, checked))
+        btn.toggled.connect(
+            lambda checked: self._toggle_password_visibility(edit, btn, checked))
         return edit, btn
 
     def _toggle_password_visibility(self, field, btn, visible):
         field.setEchoMode(QLineEdit.Normal if visible else QLineEdit.Password)
-        icon = QIcon(":/icon/icons/eye_off.png") if visible else QIcon(":/icon/icons/eye.png")
+        icon = QIcon(
+            ":/icon/icons/eye_off.png") if visible else QIcon(":/icon/icons/eye.png")
         btn.setIcon(icon)
 
     def _wrap_with_icon(self, field, icon_btn):
@@ -117,15 +124,18 @@ class UserDialog(QDialog):
         self.middlename_edit.setText(self.user_data.get("middle_name", ""))
 
         if self.role_combo and self.mode != "add":
-            self.role_combo.setCurrentText(self.user_data.get("role", RoleEnum.STUDENT.value))
+            self.role_combo.setCurrentText(
+                self.user_data.get("role", RoleEnum.STUDENT.value))
 
         self._update_placeholders()
 
     def _update_placeholders(self):
-        role = self.role_combo.currentText() if self.role_combo else self.user_data.get("role", RoleEnum.STUDENT.value)
+        role = self.role_combo.currentText() if self.role_combo else self.user_data.get(
+            "role", RoleEnum.STUDENT.value)
         label = get_role_label(role)
         is_admin = role == RoleEnum.ADMIN.value
-        hint = lambda r: f"{'Обязательно' if r else 'Необязательно'} для роли: {label}"
+        def hint(
+            r): return f"{'Обязательно' if r else 'Необязательно'} для роли: {label}"
 
         self.lastname_edit.setPlaceholderText(hint(not is_admin))
         self.firstname_edit.setPlaceholderText(hint(not is_admin))
@@ -177,7 +187,8 @@ class UserDialog(QDialog):
             if self.mode == "add":
                 self.db.add_user(login, password, last, first, middle, role)
                 user = self.db.get_user_by_login(login)
-                QMessageBox.information(self, "Успех", "Пользователь добавлен.")
+                QMessageBox.information(
+                    self, "Успех", "Пользователь добавлен.")
             else:
                 self.db.update_user_info(
                     user_id=self.user_data["id"],

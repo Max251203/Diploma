@@ -1,10 +1,9 @@
-# db/users_db.py
-
 import sqlite3
 import bcrypt
 from typing import Optional, List, Dict
 from db.init_db import get_db_path
 from core.permissions import get_all_roles
+
 
 class UserDB:
     def __init__(self):
@@ -49,7 +48,8 @@ class UserDB:
 
         cursor = self.conn.cursor()
         if new_password:
-            hashed = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+            hashed = bcrypt.hashpw(new_password.encode(),
+                                   bcrypt.gensalt()).decode()
             cursor.execute("""
                 UPDATE users
                 SET login=?, last_name=?, first_name=?, middle_name=?, password_hash=?, role=COALESCE(?, role)
@@ -83,7 +83,8 @@ class UserDB:
 
     def get_all_users(self) -> List[Dict]:
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, login, last_name, first_name, middle_name, role FROM users")
+        cursor.execute(
+            "SELECT id, login, last_name, first_name, middle_name, role FROM users")
         return [
             {
                 "id": row[0],
@@ -103,7 +104,8 @@ class UserDB:
     def update_user_role(self, user_id: int, new_role: str):
         if new_role not in get_all_roles():
             raise ValueError("Недопустимая роль")
-        self.conn.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+        self.conn.execute(
+            "UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
         self.conn.commit()
 
     def _row_to_dict(self, row) -> Dict:

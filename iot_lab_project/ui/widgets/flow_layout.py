@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QLayout, QSizePolicy
 from PySide6.QtCore import Qt, QRect, QSize, QPoint
 
+
 class FlowLayout(QLayout):
     def __init__(self, parent=None, margin=0, spacing=-1):
         super().__init__(parent)
@@ -54,8 +55,12 @@ class FlowLayout(QLayout):
 
         for item in self._items:
             style = item.widget().style()
-            space_x = spacing + style.layoutSpacing(QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Horizontal)
-            space_y = spacing + style.layoutSpacing(QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical)
+            space_x = spacing + \
+                style.layoutSpacing(QSizePolicy.PushButton,
+                                    QSizePolicy.PushButton, Qt.Horizontal)
+            space_y = spacing + \
+                style.layoutSpacing(QSizePolicy.PushButton,
+                                    QSizePolicy.PushButton, Qt.Vertical)
 
             next_x = x + item.sizeHint().width() + space_x
             if next_x - space_x > rect.right() and line_height > 0:

@@ -1,6 +1,7 @@
 from PySide6.QtCore import Signal
 from core.workers.base_worker import BaseWorker
 
+
 class DeviceLoader(BaseWorker):
     devices_loaded = Signal(dict)
 
@@ -13,7 +14,8 @@ class DeviceLoader(BaseWorker):
 
     def _task(self):
         self.logger.info("Запрос устройств через DeviceManager...")
-        self.device_manager.get_categorized_devices(callback=self._on_devices_loaded)
+        self.device_manager.get_categorized_devices(
+            callback=self._on_devices_loaded)
 
     def _on_devices_loaded(self, categorized: dict):
         self.logger.success("Устройства успешно загружены.")

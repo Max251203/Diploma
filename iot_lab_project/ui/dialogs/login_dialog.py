@@ -6,11 +6,12 @@ from PySide6.QtGui import QIcon
 from PySide6.QtCore import QSize
 from db.users_db import UserDB
 
+
 class LoginDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Вход / Регистрация")
-        self.setFixedSize(400, 220) 
+        self.setFixedSize(400, 220)
         self.setObjectName("loginDialog")
 
         self.db = UserDB()
@@ -29,11 +30,15 @@ class LoginDialog(QDialog):
         self.login_edit = QLineEdit(placeholderText="Введите логин")
         self.form.addRow("Логин:", self.login_edit)
 
-        self.password_edit, self.toggle_password_btn = self._create_password_field("Введите пароль")
-        self.form.addRow("Пароль:", self._wrap_with_icon(self.password_edit, self.toggle_password_btn))
+        self.password_edit, self.toggle_password_btn = self._create_password_field(
+            "Введите пароль")
+        self.form.addRow("Пароль:", self._wrap_with_icon(
+            self.password_edit, self.toggle_password_btn))
 
-        self.repeat_edit, self.toggle_repeat_btn = self._create_password_field("Повторите пароль")
-        self.row_repeat = self._wrap_with_icon(self.repeat_edit, self.toggle_repeat_btn)
+        self.repeat_edit, self.toggle_repeat_btn = self._create_password_field(
+            "Повторите пароль")
+        self.row_repeat = self._wrap_with_icon(
+            self.repeat_edit, self.toggle_repeat_btn)
         self.form.addRow("Повтор пароля:", self.row_repeat)
 
         self.lastname_edit = QLineEdit(placeholderText="Введите фамилию")
@@ -64,7 +69,8 @@ class LoginDialog(QDialog):
         btn.setIcon(QIcon(":/icon/icons/eye.png"))
         btn.setIconSize(QSize(20, 20))
         btn.setCheckable(True)
-        btn.toggled.connect(lambda checked, e=edit, b=btn: self._toggle_password(checked, e, b))
+        btn.toggled.connect(lambda checked, e=edit,
+                            b=btn: self._toggle_password(checked, e, b))
         return edit, btn
 
     def _wrap_with_icon(self, line_edit, icon_button):
@@ -77,8 +83,10 @@ class LoginDialog(QDialog):
         return container
 
     def _toggle_password(self, visible, line_edit, button):
-        line_edit.setEchoMode(QLineEdit.Normal if visible else QLineEdit.Password)
-        icon = QIcon(":/icon/icons/eye_off.png") if visible else QIcon(":/icon/icons/eye.png")
+        line_edit.setEchoMode(
+            QLineEdit.Normal if visible else QLineEdit.Password)
+        icon = QIcon(
+            ":/icon/icons/eye_off.png") if visible else QIcon(":/icon/icons/eye.png")
         button.setIcon(icon)
 
     def _toggle_mode(self):
@@ -99,7 +107,8 @@ class LoginDialog(QDialog):
         self.middlename_edit.setVisible(register)
 
         self.submit_btn.setText("Зарегистрироваться" if register else "Войти")
-        self.toggle_mode_btn.setText("Уже есть аккаунт" if register else "У меня нет аккаунта")
+        self.toggle_mode_btn.setText(
+            "Уже есть аккаунт" if register else "У меня нет аккаунта")
         self.setFixedSize(400, 460 if register else 220)
 
     def _on_submit(self):
@@ -110,7 +119,7 @@ class LoginDialog(QDialog):
             last = self.lastname_edit.text().strip()
             first = self.firstname_edit.text().strip()
             middle = self.middlename_edit.text().strip()
-            
+
             if not login or not password or not repeat or not last or not first or not middle:
                 return QMessageBox.warning(self, "Ошибка", "Заполните все поля")
             if password != repeat:
@@ -129,4 +138,5 @@ class LoginDialog(QDialog):
                 self.user_data = user
                 self.accept()
             else:
-                QMessageBox.warning(self, "Ошибка", "Неверный логин или пароль")
+                QMessageBox.warning(
+                    self, "Ошибка", "Неверный логин или пароль")

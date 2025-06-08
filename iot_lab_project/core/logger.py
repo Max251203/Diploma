@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 class Logger:
     _instance = None
 
@@ -24,6 +25,7 @@ class Logger:
 
     def get_text_log(self) -> str:
         return "".join(self.text_log)
+
 
 def get_logger() -> Logger:
     return Logger()

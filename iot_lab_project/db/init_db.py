@@ -5,8 +5,10 @@ from core.permissions import RoleEnum
 
 DB_NAME = "iot_lab_data.db"
 
+
 def get_db_path() -> str:
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources"))
+    base_dir = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), "..", "resources"))
     os.makedirs(base_dir, exist_ok=True)
     path = os.path.join(base_dir, DB_NAME)
 
@@ -15,6 +17,7 @@ def get_db_path() -> str:
         initialize_database(path)
 
     return path
+
 
 def initialize_database(db_path: str):
     conn = sqlite3.connect(db_path)
@@ -54,7 +57,8 @@ def initialize_database(db_path: str):
     """)
 
     # Администратор по умолчанию
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = ?", (RoleEnum.ADMIN.value,))
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = ?",
+                   (RoleEnum.ADMIN.value,))
     if cursor.fetchone()[0] == 0:
         hashed = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
         cursor.execute("""

@@ -2,6 +2,7 @@ import sqlite3
 from typing import List, Dict, Optional
 from db.init_db import get_db_path
 
+
 class HAConnectionDB:
     def __init__(self):
         self.conn = sqlite3.connect(get_db_path())
@@ -40,7 +41,8 @@ class HAConnectionDB:
 
     def get_connection_by_id(self, conn_id: int) -> Optional[Dict]:
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, name, url, token FROM ha_connections WHERE id = ?", (conn_id,))
+        cursor.execute(
+            "SELECT id, name, url, token FROM ha_connections WHERE id = ?", (conn_id,))
         row = cursor.fetchone()
         return {"id": row[0], "name": row[1], "url": row[2], "token": row[3]} if row else None
 
@@ -60,14 +62,16 @@ class HAConnectionDB:
         self.conn.commit()
 
     def delete_connection(self, conn_id: int):
-        self.conn.execute("DELETE FROM ha_connections WHERE id = ?", (conn_id,))
+        self.conn.execute(
+            "DELETE FROM ha_connections WHERE id = ?", (conn_id,))
         self.conn.commit()
 
     # === Custom API CRUD ===
 
     def get_all_custom_api_connections(self) -> List[Dict]:
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, name, url, api_key FROM custom_api_connections")
+        cursor.execute(
+            "SELECT id, name, url, api_key FROM custom_api_connections")
         return [
             {"id": row[0], "name": row[1], "url": row[2], "api_key": row[3]}
             for row in cursor.fetchall()
@@ -75,7 +79,8 @@ class HAConnectionDB:
 
     def get_custom_api_connection_by_id(self, conn_id: int) -> Optional[Dict]:
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, name, url, api_key FROM custom_api_connections WHERE id = ?", (conn_id,))
+        cursor.execute(
+            "SELECT id, name, url, api_key FROM custom_api_connections WHERE id = ?", (conn_id,))
         row = cursor.fetchone()
         return {"id": row[0], "name": row[1], "url": row[2], "api_key": row[3]} if row else None
 
@@ -95,7 +100,8 @@ class HAConnectionDB:
         self.conn.commit()
 
     def delete_custom_api_connection(self, conn_id: int):
-        self.conn.execute("DELETE FROM custom_api_connections WHERE id = ?", (conn_id,))
+        self.conn.execute(
+            "DELETE FROM custom_api_connections WHERE id = ?", (conn_id,))
         self.conn.commit()
 
     def close(self):

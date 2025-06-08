@@ -30,7 +30,8 @@ class EntityWidget(QFrame):
     def setup_ui(self):
         layout = QGridLayout(self)
 
-        entity_name = self.entity.get("original_name", self.entity.get("name", "—"))
+        entity_name = self.entity.get(
+            "original_name", self.entity.get("name", "—"))
         name_label = QLabel(f"<b>{entity_name}</b>")
         name_label.setObjectName("entityNameLabel")
         layout.addWidget(name_label, 0, 0, 1, 2)
@@ -104,8 +105,10 @@ class EntityWidget(QFrame):
         btn_off = QPushButton("Выключить")
         btn_off.setObjectName("btnEntityOff")
 
-        btn_on.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "turn_on"))
-        btn_off.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "turn_off"))
+        btn_on.clicked.connect(
+            lambda: self.control_requested.emit(self.entity_id, "turn_on"))
+        btn_off.clicked.connect(
+            lambda: self.control_requested.emit(self.entity_id, "turn_off"))
 
         control_layout.addWidget(btn_on)
         control_layout.addWidget(btn_off)
@@ -124,8 +127,10 @@ class EntityWidget(QFrame):
         btn_close = QPushButton("Закрыть")
         btn_close.setObjectName("btnEntityOff")
 
-        btn_open.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "open_cover"))
-        btn_close.clicked.connect(lambda: self.control_requested.emit(self.entity_id, "close_cover"))
+        btn_open.clicked.connect(
+            lambda: self.control_requested.emit(self.entity_id, "open_cover"))
+        btn_close.clicked.connect(
+            lambda: self.control_requested.emit(self.entity_id, "close_cover"))
 
         control_layout.addWidget(btn_open)
         control_layout.addWidget(btn_close)

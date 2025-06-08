@@ -128,10 +128,12 @@ class ConnectionDialog(QDialog):
 
         if self.selected_ha_id:
             self.db.update_connection(self.selected_ha_id, name, url, token)
-            QMessageBox.information(self, "Обновлено", "HA подключение обновлено.")
+            QMessageBox.information(
+                self, "Обновлено", "HA подключение обновлено.")
         else:
             self.db.add_connection(name, url, token)
-            QMessageBox.information(self, "Добавлено", "Новое HA подключение добавлено.")
+            QMessageBox.information(
+                self, "Добавлено", "Новое HA подключение добавлено.")
 
         self._load_connections()
         self.accept()
@@ -174,11 +176,14 @@ class ConnectionDialog(QDialog):
             return QMessageBox.warning(self, "Ошибка", "Пожалуйста, заполните все поля.")
 
         if self.selected_api_id:
-            self.db.update_custom_api_connection(self.selected_api_id, name, url, key)
-            QMessageBox.information(self, "Обновлено", "API подключение обновлено.")
+            self.db.update_custom_api_connection(
+                self.selected_api_id, name, url, key)
+            QMessageBox.information(
+                self, "Обновлено", "API подключение обновлено.")
         else:
             self.db.add_custom_api_connection(name, url, key)
-            QMessageBox.information(self, "Добавлено", "Новое API подключение добавлено.")
+            QMessageBox.information(
+                self, "Добавлено", "Новое API подключение добавлено.")
 
         self._load_connections()
         self.accept()

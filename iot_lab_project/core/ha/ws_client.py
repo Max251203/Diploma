@@ -1,8 +1,12 @@
-import asyncio, json, websockets, threading
+import asyncio
+import json
+import websockets
+import threading
 from typing import Callable, Dict, Any, Optional
 from core.logger import get_logger
 
 text_logger = get_logger()
+
 
 class HomeAssistantWSClient:
     _instance = None
@@ -10,7 +14,8 @@ class HomeAssistantWSClient:
     @staticmethod
     def get_instance() -> 'HomeAssistantWSClient':
         if HomeAssistantWSClient._instance is None:
-            raise RuntimeError("WS клиент не инициализирован. Вызови init() сначала.")
+            raise RuntimeError(
+                "WS клиент не инициализирован. Вызови init() сначала.")
         return HomeAssistantWSClient._instance
 
     @staticmethod
@@ -86,7 +91,8 @@ class HomeAssistantWSClient:
     def send_command(self, command_type: str, payload: Optional[Dict] = None,
                      callback: Optional[Callable[[Any], None]] = None):
         if not self._connected or not self._ws:
-            text_logger.warning("[WS] Попытка отправки команды без соединения.")
+            text_logger.warning(
+                "[WS] Попытка отправки команды без соединения.")
             return
 
         asyncio.run_coroutine_threadsafe(

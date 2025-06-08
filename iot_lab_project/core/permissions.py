@@ -1,5 +1,3 @@
-# core/permissions.py
-
 from enum import Enum
 
 
@@ -15,11 +13,13 @@ ROLE_LABELS = {
     RoleEnum.ADMIN: "Администратор"
 }
 
+
 class Permission(str, Enum):
     MANAGE_USERS = "manage_users"
     VIEW_LOGS = "view_logs"
     ACCESS_DEVICES = "access_devices"
     ACCESS_LABS = "access_labs"
+
 
 PERMISSION_LABELS = {
     Permission.MANAGE_USERS: "Управление пользователями",
@@ -47,14 +47,17 @@ ROLE_PERMISSIONS = {
     }
 }
 
+
 def get_role_label(role: str) -> str:
     try:
         return ROLE_LABELS[RoleEnum(role)]
     except Exception:
         return role
 
+
 def get_all_roles() -> list[str]:
     return [r.value for r in RoleEnum]
+
 
 def has_permission(role: str, permission: Permission) -> bool:
     try:

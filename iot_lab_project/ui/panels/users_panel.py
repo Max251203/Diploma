@@ -8,6 +8,7 @@ from db.users_db import UserDB
 from ui.dialogs.user_dialog import UserDialog
 from core.permissions import get_all_roles, get_role_label
 
+
 class UsersPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -39,7 +40,8 @@ class UsersPanel(QWidget):
         layout.addWidget(self.table)
 
         buttons = QHBoxLayout()
-        self.btn_add = QPushButton("Добавить пользователя", clicked=self._add_user)
+        self.btn_add = QPushButton(
+            "Добавить пользователя", clicked=self._add_user)
         self.btn_edit = QPushButton("Редактировать", clicked=self._edit_user)
         self.btn_delete = QPushButton("Удалить", clicked=self._delete_user)
 
@@ -57,7 +59,8 @@ class UsersPanel(QWidget):
         for i, user in enumerate(self.users):
             self.table.setItem(i, 0, QTableWidgetItem(user["login"]))
 
-            fio = f"{user.get('last_name', '')} {user.get('first_name', '')} {user.get('middle_name', '')}".strip()
+            fio = f"{user.get('last_name', '')} {user.get('first_name', '')} {user.get('middle_name', '')}".strip(
+            )
             self.table.setItem(i, 1, QTableWidgetItem(fio))
 
             is_self = user["id"] == self.current_user_id
@@ -73,7 +76,8 @@ class UsersPanel(QWidget):
                 combo.setCurrentText(user["role"])
                 combo.setMinimumHeight(26)
                 combo.setStyleSheet("margin:1px; padding:1px;")
-                combo.currentTextChanged.connect(lambda role, uid=user["id"]: self._change_role(uid, role))
+                combo.currentTextChanged.connect(
+                    lambda role, uid=user["id"]: self._change_role(uid, role))
                 self.table.setCellWidget(i, 2, combo)
 
     def _get_selected_user(self):
@@ -87,7 +91,8 @@ class UsersPanel(QWidget):
 
     def _change_role(self, user_id, new_role):
         self.db.update_user_role(user_id, new_role)
-        QMessageBox.information(self, "Роль обновлена", f"Назначена роль: {get_role_label(new_role)}")
+        QMessageBox.information(self, "Роль обновлена",
+                                f"Назначена роль: {get_role_label(new_role)}")
 
     def _add_user(self):
         dialog = UserDialog(mode="add", parent=self)

@@ -3,6 +3,7 @@ from typing import List, Dict, Optional
 from core.workers.base_worker import BaseWorker
 from core.ha.entity_manager import EntityManager
 
+
 class StateLoaderThread(BaseWorker):
     states_loaded = Signal(dict)
 
@@ -28,7 +29,8 @@ class StateLoaderThread(BaseWorker):
 
             def on_state_loaded(state):
                 self.states_loaded.emit({entity_id: state} if state else {})
-            self.entity_manager.get_entity_state(entity_id, callback=on_state_loaded)
+            self.entity_manager.get_entity_state(
+                entity_id, callback=on_state_loaded)
             return
 
         def on_states_loaded(states: List[Dict]):

@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Callable, Optional
 from core.ha.ws_client import HomeAssistantWSClient
 from core.ha.rest_client import HomeAssistantRestClient
 
+
 class EntityManager:
     """Менеджер сущностей Home Assistant"""
 

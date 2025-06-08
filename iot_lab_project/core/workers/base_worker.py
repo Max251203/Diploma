@@ -1,6 +1,7 @@
 from PySide6.QtCore import QThread, Signal
 from core.logger import get_logger
 
+
 class BaseWorker(QThread):
     error = Signal(str)
 
