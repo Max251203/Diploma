@@ -9,6 +9,7 @@ from ui.dialogs.user_dialog import UserDialog
 from ui.dialogs.connection_dialog import ConnectionDialog
 from ui.dialogs.device_dialog import DeviceDialog
 from ui.panels.devices_panel import DevicesPanel
+from core.workers.device_loader import DeviceLoader
 from db.connection_db import HAConnectionDB
 from core.logger import get_logger
 from core.workers.connection_worker import ConnectionWorker
@@ -208,6 +209,8 @@ class MainWindow(QMainWindow):
 
     def _on_ha_connected(self, ws, rest, entity, device, url):
         self.adapter = HAAdapter(ws, rest, entity, device, url)
+        # Сохраняем ссылку на device_manager для использования с DeviceLoader
+        self.adapter.device_manager = device
         self._update_connection_status(success=True)
         self.logger.success(f"Подключено к {url}")
         self._setup_tabs_by_role()
@@ -249,12 +252,31 @@ class MainWindow(QMainWindow):
         if not self.adapter or not self.adapter.is_connected():
             QMessageBox.warning(self, "Ошибка", "Нет активного подключения.")
             return
-        try:
-            devices = self.adapter.get_devices_by_category()
-            self.ui.layoutDeviceList.itemAt(0).widget().update_devices(devices)
-        except Exception as e:
-            self.logger.error(f"Ошибка загрузки: {e}")
-            QMessageBox.critical(self, "Ошибка загрузки", str(e))
+
+        self.logger.info("Загрузка устройств...")
+        self._refresh_logs()
+        self.devices_panel.clear_devices()
+        self.devices_panel.show_loading_indicator("Загрузка устройств...")
+
+        # Используем DeviceLoader для асинхронной загрузки
+        if hasattr(self.adapter, "device_manager"):
+            # Для HAAdapter
+            loader = DeviceLoader(self.adapter.device_manager)
+            loader.devices_loaded.connect(self.devices_panel.update_devices)
+            loader.error.connect(lambda e: self.logger.error(
+                f"Ошибка загрузки устройств: {e}"))
+            loader.start()
+            self.device_loader = loader
+        else:
+            # Для других адаптеров
+            try:
+                devices = self.adapter.get_devices_by_category()
+                self.devices_panel.update_devices(devices)
+                self.logger.success("Устройства успешно загружены")
+            except Exception as e:
+                self.logger.error(f"Ошибка загрузки: {e}")
+                QMessageBox.critical(self, "Ошибка загрузки", str(e))
+
         self._refresh_logs()
 
     def _open_device_dialog(self, device):

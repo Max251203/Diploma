@@ -47,6 +47,11 @@ class DevicesPanel(QWidget):
 
     def update_devices(self, categorized_devices: dict):
         """Обновить устройства, сгруппированные по категориям"""
+        from core.logger import get_logger
+        logger = get_logger()
+
+        logger.info(
+            f"Обновление панели устройств: получено {len(categorized_devices)} категорий")
         self.devices_by_category = categorized_devices
         self.categories = list(categorized_devices.keys())
 
@@ -55,12 +60,14 @@ class DevicesPanel(QWidget):
             icon = self._get_icon_for_category(cat)
             item = QListWidgetItem(icon, cat)
             self.category_list.addItem(item)
+            logger.info(
+                f"Добавлена категория: {cat} с {len(categorized_devices[cat])} устройствами")
 
         # Первая категория по умолчанию
         if self.categories:
             self.category_list.setCurrentRow(0)
         else:
-            self.logger.warning("Не получено ни одной категории устройств")
+            logger.warning("Не получено ни одной категории устройств")
 
     def _get_icon_for_category(self, category: str) -> QIcon:
         cat = category.lower()
