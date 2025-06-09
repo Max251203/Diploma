@@ -276,7 +276,7 @@ QTableWidget {
     background-color: rgba(0, 0, 0, 0.5);
     alternate-background-color: rgba(255, 93, 44, 0.05);
     color: rgb(223, 179, 147);
-        border: 1px solid #ff5e2c;
+    border: 1px solid #ff5e2c;
 }
 QTableView {
     selection-background-color: transparent;
@@ -356,6 +356,8 @@ QHeaderView::section {
 /* === Кнопки управлений сущностью === */
 #btnEntityOn {
     background-color: rgba(60, 30, 0, 0.5);
+    min-height: 28px;
+    min-width: 80px;
 }
 #btnEntityOn:hover {
     background-color: rgba(255, 140, 0, 0.5);
@@ -364,9 +366,22 @@ QHeaderView::section {
 }
 #btnEntityOff {
     background-color: rgba(60, 0, 0, 0.5);
+    min-height: 28px;
+    min-width: 80px;
 }
 #btnEntityOff:hover {
     background-color: rgba(255, 0, 0, 0.5);
+    border: 1px solid #ffffff;
+    color: #ff5e2c;
+}
+
+/* === Кнопка обновления === */
+#refreshButton {
+    background-color: rgba(0, 30, 60, 0.5);
+    min-height: 28px;
+}
+#refreshButton:hover {
+    background-color: rgba(0, 140, 255, 0.5);
     border: 1px solid #ffffff;
     color: #ff5e2c;
 }

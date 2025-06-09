@@ -47,39 +47,68 @@ class DevicesPanel(QWidget):
 
     def update_devices(self, categorized_devices: dict):
         """Обновить устройства, сгруппированные по категориям"""
-        from core.logger import get_logger
-        logger = get_logger()
-
-        logger.info(
+        self.logger.info(
             f"Обновление панели устройств: получено {len(categorized_devices)} категорий")
         self.devices_by_category = categorized_devices
-        self.categories = list(categorized_devices.keys())
+
+        # Определяем порядок категорий
+        ordered_categories = []
+
+        # Сначала добавляем категории в определенном порядке, если они есть
+        for category in ["Датчики", "Исполнительные устройства", "Системные"]:
+            if category in categorized_devices:
+                ordered_categories.append(category)
+
+        # Затем добавляем все остальные категории, кроме "Прочее"
+        for category in categorized_devices:
+            if category not in ordered_categories and category != "Прочее":
+                ordered_categories.append(category)
+
+        # В конце добавляем "Прочее", если есть
+        if "Прочее" in categorized_devices:
+            ordered_categories.append("Прочее")
+
+        self.categories = ordered_categories
 
         self.category_list.clear()
         for cat in self.categories:
             icon = self._get_icon_for_category(cat)
             item = QListWidgetItem(icon, cat)
             self.category_list.addItem(item)
-            logger.info(
+            self.logger.info(
                 f"Добавлена категория: {cat} с {len(categorized_devices[cat])} устройствами")
 
         # Первая категория по умолчанию
         if self.categories:
             self.category_list.setCurrentRow(0)
         else:
-            logger.warning("Не получено ни одной категории устройств")
+            self.logger.warning("Не получено ни одной категории устройств")
 
     def _get_icon_for_category(self, category: str) -> QIcon:
-        cat = category.lower()
-        if "датчик" in cat:
-            return QIcon(":/icon/icons/sensor.png")
-        if "исполнитель" in cat or "реле" in cat or "переключатель" in cat:
-            return QIcon(":/icon/icons/actuator.png")
-        if "система" in cat or "core" in cat or "сеть" in cat:
+        # Прямое сопоставление категорий с иконками
+        if category == "Системные":
             return QIcon(":/icon/icons/system.png")
-        if "группа" in cat:
+        elif category == "Датчики":
+            return QIcon(":/icon/icons/sensor.png")
+        elif category == "Исполнительные устройства":
+            return QIcon(":/icon/icons/actuator.png")
+        elif category == "Группы":
+            return QIcon(":/icon/icons/group.png")
+        elif category == "Прочее":
             return QIcon(":/icon/icons/other.png")
-        return QIcon(":/icon/icons/other.png")
+
+        # Если точное совпадение не найдено, используем поиск по ключевым словам
+        cat = category.lower()
+        if "датчик" in cat or "sensor" in cat:
+            return QIcon(":/icon/icons/sensor.png")
+        elif "исполнитель" in cat or "реле" in cat or "переключатель" in cat or "actuator" in cat:
+            return QIcon(":/icon/icons/actuator.png")
+        elif "система" in cat or "system" in cat:
+            return QIcon(":/icon/icons/system.png")
+        elif "группа" in cat or "group" in cat:
+            return QIcon(":/icon/icons/group.png")
+        else:
+            return QIcon(":/icon/icons/other.png")
 
     def _show_category(self, index=None):
         self._clear()
@@ -111,3 +140,12 @@ class DevicesPanel(QWidget):
             item = self.flow_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+
+    def update_device_state(self, device_id: str, state_data: dict):
+        """Обновляет состояние устройства по его ID"""
+        for i in range(self.flow_layout.count()):
+            widget = self.flow_layout.itemAt(i).widget()
+            if isinstance(widget, DeviceCard):
+                if widget.device.get("id") == device_id or widget.device.get("entity_id") == device_id:
+                    widget.update_state(state_data)
+                    break

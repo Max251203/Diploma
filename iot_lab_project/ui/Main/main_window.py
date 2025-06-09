@@ -9,10 +9,10 @@ from ui.dialogs.user_dialog import UserDialog
 from ui.dialogs.connection_dialog import ConnectionDialog
 from ui.dialogs.device_dialog import DeviceDialog
 from ui.panels.devices_panel import DevicesPanel
-from core.workers.device_loader import DeviceLoader
 from db.connection_db import HAConnectionDB
 from core.logger import get_logger
 from core.workers.connection_worker import ConnectionWorker
+from core.workers.device_loader import DeviceLoader
 from core.adapters.ha_adapter import HAAdapter
 from core.adapters.api_adapter import APIAdapter
 from core.permissions import has_permission, Permission, get_role_label
@@ -189,6 +189,7 @@ class MainWindow(QMainWindow):
             worker = ConnectionWorker(conn_data["url"], conn_data["token"])
             worker.connection_success.connect(self._on_ha_connected)
             worker.connection_failed.connect(self._on_connection_error)
+            worker.state_changed.connect(self._on_entity_state_changed)
             self.connection_worker = worker
             worker.start()
 
@@ -283,6 +284,39 @@ class MainWindow(QMainWindow):
         if self.adapter:
             dialog = DeviceDialog(device, self.adapter, parent=self)
             dialog.exec()
+
+    def _control_device(self, device_id: str, command: dict):
+        """Отправляет команду управления устройством"""
+        if not self.adapter:
+            self.logger.error(
+                "Нет активного подключения для управления устройством")
+            return
+
+        try:
+            success = self.adapter.send_command(device_id, command)
+            if success:
+                self.logger.success(
+                    f"Команда отправлена: {device_id} → {command}")
+            else:
+                self.logger.error(
+                    f"Ошибка отправки команды: {device_id} → {command}")
+        except Exception as e:
+            self.logger.error(f"Ошибка при управлении устройством: {e}")
+
+        self._refresh_logs()
+
+    def _on_entity_state_changed(self, entity_id: str, new_state: dict):
+        # Обновляем виджеты в диалоге устройства
+        widget = self.entity_widgets.get(entity_id)
+        if widget:
+            widget.update_state(new_state)
+            self.logger.info(
+                f"[UI] Обновлено: {entity_id} → {new_state.get('state')}")
+
+        # Обновляем карточки устройств на панели
+        self.devices_panel.update_device_state(entity_id, new_state)
+
+        self._refresh_logs()
 
     def _refresh_logs(self):
         self.ui.textEditLogs.setHtml(self.logger.get_text_log())
