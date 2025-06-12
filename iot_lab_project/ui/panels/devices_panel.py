@@ -1,23 +1,26 @@
 from PySide6.QtWidgets import (
     QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QHBoxLayout,
-    QLabel, QScrollArea
+    QLabel, QScrollArea, QPushButton, QMessageBox
 )
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import Qt, Signal
 from ui.widgets.flow_layout import FlowLayout
 from ui.widgets.device_card import DeviceCard
 from core.logger import get_logger
+from core.api_client import APIClient
 
 
 class DevicesPanel(QWidget):
     device_selected = Signal(dict)
 
-    def __init__(self, parent=None):
+    def __init__(self, api_client: APIClient, parent=None):
         super().__init__(parent)
+        self.api_client = api_client
         self.devices_by_category = {}
         self.categories = []
         self.logger = get_logger()
         self._build_ui()
+        self.refresh_devices()
 
     def _build_ui(self):
         layout = QHBoxLayout(self)
@@ -29,10 +32,15 @@ class DevicesPanel(QWidget):
         self.category_list.currentRowChanged.connect(self._show_category)
         layout.addWidget(self.category_list)
 
-        # Правая часть: скролл с карточками
+        # Правая панель: скролл с карточками
         self.panel = QWidget(objectName="devicesBox")
         panel_layout = QVBoxLayout(self.panel)
         panel_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Кнопка обновления
+        refresh_btn = QPushButton("Обновить устройства")
+        refresh_btn.clicked.connect(self.refresh_devices)
+        panel_layout.addWidget(refresh_btn)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -45,6 +53,80 @@ class DevicesPanel(QWidget):
         panel_layout.addWidget(self.scroll_area)
         layout.addWidget(self.panel)
 
+    def refresh_devices(self):
+        """Обновление списка устройств"""
+        try:
+            # Показываем индикатор загрузки
+            self.clear_devices()
+            self.show_loading_indicator("Загрузка устройств...")
+
+            # Получаем устройства через API
+            devices = self.api_client.get_devices()
+
+            # Категоризируем устройства
+            categorized_devices = self._categorize_devices(devices)
+
+            # Обновляем интерфейс
+            self.update_devices(categorized_devices)
+
+            self.logger.info(f"Загружено {len(devices)} устройств")
+        except Exception as e:
+            self.logger.error(f"Ошибка загрузки устройств: {e}")
+            QMessageBox.warning(
+                self, "Ошибка", f"Не удалось загрузить устройства: {e}")
+
+    def _categorize_devices(self, devices):
+        """Категоризация устройств"""
+        categories = {
+            "Датчики": [],
+            "Исполнительные устройства": [],
+            "Системные": [],
+            "Прочее": []
+        }
+
+        for device_id, device in devices.items():
+            # Добавляем ID устройства в данные
+            device_data = dict(device)
+            device_data["id"] = device_id
+
+            # Определяем категорию устройства
+            category = self._determine_category(device_data)
+            categories[category].append(device_data)
+
+        return categories
+
+    def _determine_category(self, device):
+        """Определение категории устройства"""
+        # Проверяем по модели
+        model = (device.get("model") or "").lower()
+        name = (device.get("name") or "").lower()
+
+        # Проверяем по типу устройства
+        if "sensor" in model or "temp" in model or "hum" in model or "motion" in model:
+            return "Датчики"
+
+        if "switch" in model or "relay" in model or "light" in model or "plug" in model:
+            return "Исполнительные устройства"
+
+        # Проверяем по имени
+        if "sensor" in name or "датчик" in name:
+            return "Датчики"
+
+        if "switch" in name or "relay" in name or "light" in name or "plug" in name:
+            return "Исполнительные устройства"
+
+        # Проверяем по состоянию
+        state = device.get("state", {})
+        if isinstance(state, dict):
+            if "temperature" in state or "humidity" in state or "motion" in state:
+                return "Датчики"
+
+            if "state" in state and state["state"] in ["ON", "OFF"]:
+                return "Исполнительные устройства"
+
+        # По умолчанию
+        return "Прочее"
+
     def update_devices(self, categorized_devices: dict):
         """Обновить устройства, сгруппированные по категориям"""
         self.logger.info(
@@ -56,16 +138,16 @@ class DevicesPanel(QWidget):
 
         # Сначала добавляем категории в определенном порядке, если они есть
         for category in ["Датчики", "Исполнительные устройства", "Системные"]:
-            if category in categorized_devices:
+            if category in categorized_devices and categorized_devices[category]:
                 ordered_categories.append(category)
 
         # Затем добавляем все остальные категории, кроме "Прочее"
         for category in categorized_devices:
-            if category not in ordered_categories and category != "Прочее":
+            if category not in ordered_categories and category != "Прочее" and categorized_devices[category]:
                 ordered_categories.append(category)
 
         # В конце добавляем "Прочее", если есть
-        if "Прочее" in categorized_devices:
+        if "Прочее" in categorized_devices and categorized_devices["Прочее"]:
             ordered_categories.append("Прочее")
 
         self.categories = ordered_categories
