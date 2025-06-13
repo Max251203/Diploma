@@ -4,7 +4,10 @@ from PySide6.QtWidgets import (
     QHeaderView, QMessageBox, QDialog
 )
 from PySide6.QtCore import Qt
-from db.users_db import UserDB
+from core.api import api_client
+from core.api.api_worker import (
+    GetUsersWorker, UpdateUserWorker, DeleteUserWorker
+)
 from ui.dialogs.user_dialog import UserDialog
 from core.permissions import get_all_roles, get_role_label
 
@@ -12,7 +15,6 @@ from core.permissions import get_all_roles, get_role_label
 class UsersPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.db = UserDB()
         self.users = []
         self.current_user_id = (
             parent.user_data.get("id")
@@ -53,7 +55,20 @@ class UsersPanel(QWidget):
         layout.addLayout(buttons)
 
     def _load_users(self):
-        self.users = self.db.get_all_users()
+        """Загрузка списка пользователей через API"""
+        worker = GetUsersWorker(api_client)
+        worker.result_ready.connect(self._on_users_loaded)
+        worker.error_occurred.connect(self._show_error)
+        worker.start()
+
+    def _on_users_loaded(self, users):
+        """Обработка загруженных пользователей"""
+        if users is None:
+            QMessageBox.warning(
+                self, "Ошибка", "Не удалось загрузить пользователей")
+            return
+
+        self.users = users
         self.table.setRowCount(len(self.users))
 
         for i, user in enumerate(self.users):
@@ -84,15 +99,26 @@ class UsersPanel(QWidget):
         index = self.table.currentRow()
         if index < 0:
             return None
-        login_item = self.table.item(index, 0)
-        if not login_item:
-            return None
-        return self.db.get_user_by_login(login_item.text())
+        return self.users[index] if index < len(self.users) else None
 
     def _change_role(self, user_id, new_role):
-        self.db.update_user_role(user_id, new_role)
-        QMessageBox.information(self, "Роль обновлена",
-                                f"Назначена роль: {get_role_label(new_role)}")
+        """Изменение роли пользователя через API"""
+        worker = UpdateUserWorker(api_client, user_id, {"role": new_role})
+        worker.result_ready.connect(
+            lambda user: self._on_role_updated(user, new_role))
+        worker.error_occurred.connect(self._show_error)
+        worker.start()
+
+    def _on_role_updated(self, user, new_role):
+        """Обработка успешного обновления роли"""
+        if user:
+            QMessageBox.information(self, "Роль обновлена",
+                                    f"Назначена роль: {get_role_label(new_role)}")
+            # Обновляем список пользователей
+            self._load_users()
+        else:
+            QMessageBox.warning(
+                self, "Ошибка", "Не удалось обновить роль пользователя")
 
     def _add_user(self):
         dialog = UserDialog(mode="add", parent=self)
@@ -122,8 +148,21 @@ class UsersPanel(QWidget):
             QMessageBox.Yes | QMessageBox.No
         )
         if confirm == QMessageBox.Yes:
-            self.db.delete_user(user["id"])
+            worker = DeleteUserWorker(api_client, user["id"])
+            worker.result_ready.connect(
+                lambda success: self._on_user_deleted(success, user))
+            worker.error_occurred.connect(self._show_error)
+            worker.start()
+
+    def _on_user_deleted(self, success, user):
+        """Обработка результата удаления пользователя"""
+        if success:
+            QMessageBox.information(
+                self, "Успех", f"Пользователь {user['login']} удален")
             self._load_users()
+        else:
+            QMessageBox.warning(
+                self, "Ошибка", "Не удалось удалить пользователя")
 
     def _on_user_saved(self, user):
         mainwin = self.window()
@@ -138,3 +177,7 @@ class UsersPanel(QWidget):
         )
 
         self._load_users()
+
+    def _show_error(self, error):
+        """Отображение ошибки"""
+        QMessageBox.warning(self, "Ошибка", error)

@@ -5,7 +5,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QSize, Signal
 
-from db.users_db import UserDB
+from core.api import api_client
+from core.api.api_worker import (
+    GetUserWorker, CreateUserWorker, UpdateUserWorker
+)
 from core.permissions import get_all_roles, get_role_label, RoleEnum
 
 
@@ -19,7 +22,6 @@ class UserDialog(QDialog):
         self.setFixedHeight(340)
         self.mode = mode
         self.user_data = user_data or {}
-        self.db = UserDB()
 
         self._parent_user = self._find_current_user()
         self._is_self_edit = (
@@ -185,24 +187,64 @@ class UserDialog(QDialog):
 
         try:
             if self.mode == "add":
-                self.db.add_user(login, password, last, first, middle, role)
-                user = self.db.get_user_by_login(login)
-                QMessageBox.information(
-                    self, "Успех", "Пользователь добавлен.")
-            else:
-                self.db.update_user_info(
-                    user_id=self.user_data["id"],
-                    login=login,
-                    last_name=last,
-                    first_name=first,
-                    middle_name=middle,
-                    new_password=password or None,
-                    role=role
-                )
-                user = self.db.get_user_by_login(login)
-                QMessageBox.information(self, "Успех", "Данные обновлены.")
-            self.user_saved.emit(user)
-            self.accept()
+                # Создание нового пользователя через API
+                user_data = {
+                    "login": login,
+                    "password": password,
+                    "last_name": last,
+                    "first_name": first,
+                    "middle_name": middle,
+                    "role": role
+                }
 
-        except ValueError as e:
+                worker = CreateUserWorker(api_client, user_data)
+                worker.result_ready.connect(self._on_user_created)
+                worker.error_occurred.connect(self._show_error)
+                worker.start()
+            else:
+                # Обновление существующего пользователя через API
+                user_data = {
+                    "login": login,
+                    "last_name": last,
+                    "first_name": first,
+                    "middle_name": middle,
+                    "role": role
+                }
+
+                if password:
+                    user_data["password"] = password
+
+                worker = UpdateUserWorker(
+                    api_client, self.user_data["id"], user_data)
+                worker.result_ready.connect(self._on_user_updated)
+                worker.error_occurred.connect(self._show_error)
+                worker.start()
+
+        except Exception as e:
             QMessageBox.warning(self, "Ошибка", str(e))
+
+    def _on_user_created(self, user):
+        """Обработка успешного создания пользователя"""
+        if not user:
+            QMessageBox.warning(
+                self, "Ошибка", "Не удалось создать пользователя")
+            return
+
+        QMessageBox.information(self, "Успех", "Пользователь добавлен.")
+        self.user_saved.emit(user)
+        self.accept()
+
+    def _on_user_updated(self, user):
+        """Обработка успешного обновления пользователя"""
+        if not user:
+            QMessageBox.warning(
+                self, "Ошибка", "Не удалось обновить пользователя")
+            return
+
+        QMessageBox.information(self, "Успех", "Данные обновлены.")
+        self.user_saved.emit(user)
+        self.accept()
+
+    def _show_error(self, error):
+        """Отображение ошибки"""
+        QMessageBox.warning(self, "Ошибка", error)

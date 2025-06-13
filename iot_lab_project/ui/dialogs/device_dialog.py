@@ -4,8 +4,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QTimer, Qt
 from typing import Dict
-from core.adapters.base_adapter import BaseAdapter
-from core.adapters.ha_adapter import HAAdapter
 from ui.widgets.entity_widget import EntityWidget, EntityState
 from core.workers.state_loader import StateLoaderThread
 
@@ -13,21 +11,15 @@ from core.workers.state_loader import StateLoaderThread
 class DeviceDialog(QDialog):
     """Диалог отображения информации об устройстве и его сущностях"""
 
-    def __init__(self, device: Dict, adapter: BaseAdapter, parent=None):
+    def __init__(self, device: Dict, api_client, parent=None):
         super().__init__(parent)
         self.device = device
-        self.adapter = adapter
+        self.api_client = api_client
         self.entity_widgets = {}
 
         self.setWindowTitle(
             f"Устройство: {device.get('name', 'Без названия')}")
         self.setMinimumSize(600, 400)
-
-        # Получаем список ID сущностей для HA устройств
-        self.entity_ids = []
-        if isinstance(adapter, HAAdapter) and "entities" in device:
-            self.entity_ids = [e.get("entity_id")
-                               for e in device['entities'] if e.get("entity_id")]
 
         self._build_ui()
         self._load_states()
@@ -96,11 +88,10 @@ class DeviceDialog(QDialog):
                 layout.addLayout(control_layout)
 
             # История для API устройств
-            if hasattr(self.adapter, "url") and hasattr(self.adapter, "api_key"):
-                layout.addWidget(QLabel("<h4>История (за последние 5):</h4>"))
-                self.history_label = QLabel("Загрузка истории...")
-                layout.addWidget(self.history_label)
-                self._load_history()
+            layout.addWidget(QLabel("<h4>История (за последние 5):</h4>"))
+            self.history_label = QLabel("Загрузка истории...")
+            layout.addWidget(self.history_label)
+            self._load_history()
 
             return  # Для API устройств не отображаем сущности
 
@@ -145,7 +136,7 @@ class DeviceDialog(QDialog):
         if entity_id.startswith(("switch.", "light.", "fan.")):
             return True
 
-            # Проверяем по сущностям
+        # Проверяем по сущностям
         entities = self.device.get("entities", [])
         for entity in entities:
             entity_id = entity.get("entity_id", "")
@@ -166,7 +157,7 @@ class DeviceDialog(QDialog):
             command = {"service": "turn_off", "data": {"state": "OFF"}}
 
         try:
-            success = self.adapter.send_command(device_id, command)
+            success = self.api_client.send_device_command(device_id, command)
             if success:
                 self.state_label.setText("Команда отправлена")
                 QTimer.singleShot(1000, self._load_states)
@@ -177,24 +168,12 @@ class DeviceDialog(QDialog):
 
     def _load_states(self):
         """Загружает состояния устройств"""
-        # Для HA устройств
-        if isinstance(self.adapter, HAAdapter) and self.entity_ids:
-            for widget in self.entity_widgets.values():
-                widget.set_state(EntityState.LOADING)
-
-            self.state_loader = StateLoaderThread(
-                self.adapter.entity_manager, self.entity_ids)
-            self.state_loader.states_loaded.connect(self._update_states)
-            self.state_loader.error.connect(self._handle_error)
-            self.state_loader.start()
-
         # Для API устройств
-        elif hasattr(self.adapter, "get_device_details") and hasattr(self, "state_label"):
-            try:
-                device_id = self.device.get(
-                    "id") or self.device.get("entity_id")
-                info = self.adapter.get_device_details(device_id)
+        try:
+            device_id = self.device.get("id") or self.device.get("entity_id")
+            info = self.api_client.get_device(device_id)
 
+            if info:
                 state = info.get("state", {})
                 if isinstance(state, dict):
                     state_text = ", ".join(
@@ -202,65 +181,43 @@ class DeviceDialog(QDialog):
                 else:
                     state_text = str(state)
 
-                self.state_label.setText(f"Состояние: {state_text}")
+                if hasattr(self, 'state_label'):
+                    self.state_label.setText(f"Состояние: {state_text}")
 
                 # Обновляем историю, если есть
                 if hasattr(self, "history_label"):
                     self._load_history()
-            except Exception as e:
+            else:
+                if hasattr(self, 'state_label'):
+                    self.state_label.setText("Ошибка получения состояния")
+        except Exception as e:
+            if hasattr(self, 'state_label'):
                 self.state_label.setText(f"Ошибка: {e}")
 
     def _load_history(self):
         """Загружает историю устройства для API"""
-        if not hasattr(self.adapter, "url") or not hasattr(self.adapter, "api_key"):
-            return
-
         try:
-            import requests
             device_id = self.device.get("id") or self.device.get("entity_id")
-            res = requests.get(
-                f"{self.adapter.url}/api/devices/{device_id}/history?limit=5",
-                headers={"x-api-key": self.adapter.api_key}
-            )
-            if res.ok:
-                history = res.json()
+            history = self.api_client.get_device_history(device_id, 5)
+
+            if history:
                 formatted = "\n".join(
                     f"{h['timestamp']}: {h['data']}" for h in history)
                 self.history_label.setText(formatted or "Пусто")
             else:
-                self.history_label.setText(
-                    f"Ошибка истории ({res.status_code})")
+                self.history_label.setText("История недоступна")
         except Exception as e:
             self.history_label.setText(f"Ошибка: {e}")
 
-    def _update_states(self, state_map: Dict[str, dict]):
-        """Обновляет состояния сущностей для HA устройств"""
-        for entity_id, widget in self.entity_widgets.items():
-            widget.update_state(state_map.get(entity_id))
-
-    def _handle_error(self, error: str):
-        """Обрабатывает ошибки загрузки состояний"""
-        QMessageBox.warning(
-            self, "Ошибка", f"Не удалось получить состояния: {error}")
-
     def _handle_control(self, entity_id: str, action: str):
-        """Обрабатывает команды управления сущностями для HA устройств"""
+        """Обрабатывает команды управления сущностями"""
         try:
-            if isinstance(self.adapter, HAAdapter):
-                domain = entity_id.split('.')[0]
-                self.adapter.ws.send_command("call_service", {
-                    "domain": domain,
-                    "service": action,
-                    "service_data": {"entity_id": entity_id}
-                })
+            command = {"service": action}
+            success = self.api_client.send_device_command(entity_id, command)
+            if success:
                 QTimer.singleShot(500, self._load_states)
             else:
-                command = {"service": action}
-                success = self.adapter.send_command(entity_id, command)
-                if success:
-                    QTimer.singleShot(500, self._load_states)
-                else:
-                    raise Exception("Ошибка отправки команды")
+                raise Exception("Ошибка отправки команды")
         except Exception as e:
             QMessageBox.warning(
                 self, "Ошибка", f"Не удалось выполнить действие: {e}")

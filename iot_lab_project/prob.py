@@ -17,5 +17,5 @@ def print_directory_structure(path, indent=''):
 
 
 # Укажите путь к папке проекта
-project_path = '../iot_lab_project'
+project_path = 'D:\Max\Diploma'
 print_directory_structure(project_path)

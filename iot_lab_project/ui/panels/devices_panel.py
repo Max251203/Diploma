@@ -3,24 +3,27 @@ from PySide6.QtWidgets import (
     QLabel, QScrollArea, QPushButton, QMessageBox
 )
 from PySide6.QtGui import QIcon, QPixmap
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 from ui.widgets.flow_layout import FlowLayout
 from ui.widgets.device_card import DeviceCard
 from core.logger import get_logger
-from core.api_client import APIClient
+from core.api import api_client
+from core.api.api_worker import GetDevicesWorker
 
 
 class DevicesPanel(QWidget):
     device_selected = Signal(dict)
 
-    def __init__(self, api_client: APIClient, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.api_client = api_client
         self.devices_by_category = {}
         self.categories = []
         self.logger = get_logger()
+        self._workers = []  # Список для хранения рабочих потоков
         self._build_ui()
-        self.refresh_devices()
+
+        # Запускаем таймер для отложенной загрузки устройств
+        QTimer.singleShot(1000, self.refresh_devices)
 
     def _build_ui(self):
         layout = QHBoxLayout(self)
@@ -60,20 +63,43 @@ class DevicesPanel(QWidget):
             self.clear_devices()
             self.show_loading_indicator("Загрузка устройств...")
 
-            # Получаем устройства через API
-            devices = self.api_client.get_devices()
+            # Проверяем подключение к API
+            if not api_client.is_connected():
+                self.logger.warning("Нет активного подключения к API")
+                self.show_loading_indicator("Нет подключения к серверу")
+                return
 
-            # Категоризируем устройства
-            categorized_devices = self._categorize_devices(devices)
+            # Используем API Worker для асинхронной загрузки
+            worker = GetDevicesWorker(api_client)
+            worker.result_ready.connect(self._on_devices_loaded)
+            worker.error_occurred.connect(self._show_error)
+            self._workers.append(worker)  # Сохраняем ссылку на поток
+            worker.start()
 
-            # Обновляем интерфейс
-            self.update_devices(categorized_devices)
-
-            self.logger.info(f"Загружено {len(devices)} устройств")
+            self.logger.info("Запрос на получение устройств отправлен")
         except Exception as e:
-            self.logger.error(f"Ошибка загрузки устройств: {e}")
-            QMessageBox.warning(
-                self, "Ошибка", f"Не удалось загрузить устройства: {e}")
+            self.logger.error(f"Ошибка при запросе устройств: {e}")
+            self.show_loading_indicator(f"Ошибка: {e}")
+
+    def _on_devices_loaded(self, devices):
+        """Обработка загруженных устройств"""
+        if not devices:
+            self.clear_devices()
+            self.show_loading_indicator("Нет доступных устройств")
+            self.logger.warning(
+                "Не удалось загрузить устройства или список пуст")
+            return
+
+        # Преобразуем устройства в формат, понятный для DevicesPanel
+        categorized_devices = self._categorize_devices(devices)
+
+        # Обновляем панель устройств
+        self.update_devices(categorized_devices)
+        self.logger.success(
+            f"Устройства успешно загружены: {len(devices)} устройств")
+
+        # Очищаем завершенные рабочие потоки
+        self._cleanup_workers()
 
     def _categorize_devices(self, devices):
         """Категоризация устройств"""
@@ -90,12 +116,12 @@ class DevicesPanel(QWidget):
             device_data["id"] = device_id
 
             # Определяем категорию устройства
-            category = self._determine_category(device_data)
+            category = self._determine_device_category(device_data)
             categories[category].append(device_data)
 
         return categories
 
-    def _determine_category(self, device):
+    def _determine_device_category(self, device):
         """Определение категории устройства"""
         # Проверяем по модели
         model = (device.get("model") or "").lower()
@@ -165,6 +191,7 @@ class DevicesPanel(QWidget):
             self.category_list.setCurrentRow(0)
         else:
             self.logger.warning("Не получено ни одной категории устройств")
+            self.show_loading_indicator("Нет доступных устройств")
 
     def _get_icon_for_category(self, category: str) -> QIcon:
         # Прямое сопоставление категорий с иконками
@@ -210,6 +237,7 @@ class DevicesPanel(QWidget):
         label = QLabel()
         label.setObjectName("loadingLabel")
         label.setAlignment(Qt.AlignCenter)
+        label.setText(message)
         label.setPixmap(QPixmap(":/icon/icons/loading.png"))
         label.setToolTip(message)
         self.flow_layout.addWidget(label)
@@ -231,3 +259,18 @@ class DevicesPanel(QWidget):
                 if widget.device.get("id") == device_id or widget.device.get("entity_id") == device_id:
                     widget.update_state(state_data)
                     break
+
+    def _show_error(self, error: str):
+        """Отображение ошибки"""
+        self.logger.error(f"Ошибка при загрузке устройств: {error}")
+        self.show_loading_indicator(f"Ошибка: {error}")
+
+        # Очищаем завершенные рабочие потоки
+        self._cleanup_workers()
+
+    def _cleanup_workers(self):
+        """Очистка завершенных рабочих потоков"""
+        for worker in self._workers[:]:
+            if not worker.isRunning():
+                worker.deleteLater()
+                self._workers.remove(worker)

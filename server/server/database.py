@@ -130,6 +130,49 @@ def init_db():
     )
     ''')
 
+    # Таблица устройств (для хранения метаданных)
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS devices (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        description TEXT,
+        location TEXT,
+        metadata JSON
+    )
+    ''')
+
+    # Таблица бронирования устройств
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS device_bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        start_time DATETIME NOT NULL,
+        end_time DATETIME NOT NULL,
+        purpose TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (device_id) REFERENCES devices(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    ''')
+
+    # Таблица сессий пользователей
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS user_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        token TEXT NOT NULL,
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        expires_at DATETIME NOT NULL,
+        is_active BOOLEAN DEFAULT 1,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    ''')
+
     # Создаем администратора по умолчанию, если его нет
     cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
     if cursor.fetchone()[0] == 0:
@@ -278,6 +321,130 @@ def get_all_users() -> List[Dict]:
     conn.close()
 
     return users
+
+
+def create_user_session(user_id: int, token: str, ip_address: str, user_agent: str, expires_at: datetime) -> int:
+    """Создание новой сессии пользователя"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO user_sessions (user_id, token, ip_address, user_agent, expires_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, token, ip_address, user_agent, expires_at.isoformat())
+    )
+    session_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return session_id
+
+
+def get_session_by_token(token: str) -> Optional[Dict]:
+    """Получение сессии по токену"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM user_sessions WHERE token = ? AND is_active = 1 AND expires_at > ?",
+        (token, datetime.now().isoformat())
+    )
+    session = cursor.fetchone()
+    conn.close()
+
+    if session:
+        return dict(session)
+    return None
+
+
+def invalidate_session(token: str) -> bool:
+    """Инвалидация сессии (выход)"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE user_sessions SET is_active = 0 WHERE token = ?",
+        (token,)
+    )
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+
+    return success
+
+
+def invalidate_all_user_sessions(user_id: int) -> int:
+    """Инвалидация всех сессий пользователя (выход со всех устройств)"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE user_sessions SET is_active = 0 WHERE user_id = ? AND is_active = 1",
+        (user_id,)
+    )
+    count = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    return count
+
+
+def save_device_metadata(device_id: str, name: str, device_type: str, description: str = None, location: str = None, metadata: Dict = None) -> bool:
+    """Сохранение метаданных устройства"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Проверяем, существует ли устройство
+    cursor.execute("SELECT id FROM devices WHERE id = ?", (device_id,))
+    exists = cursor.fetchone() is not None
+
+    if exists:
+        # Обновляем существующее устройство
+        cursor.execute(
+            "UPDATE devices SET name = ?, type = ?, description = ?, location = ?, metadata = ? WHERE id = ?",
+            (name, device_type, description, location, json.dumps(
+                metadata) if metadata else None, device_id)
+        )
+    else:
+        # Создаем новое устройство
+        cursor.execute(
+            "INSERT INTO devices (id, name, type, description, location, metadata) VALUES (?, ?, ?, ?, ?, ?)",
+            (device_id, name, device_type, description, location,
+             json.dumps(metadata) if metadata else None)
+        )
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+
+    return success
+
+
+def get_device_metadata(device_id: str) -> Optional[Dict]:
+    """Получение метаданных устройства"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM devices WHERE id = ?", (device_id,))
+    device = cursor.fetchone()
+    conn.close()
+
+    if device:
+        device_dict = dict(device)
+        if device_dict.get("metadata"):
+            device_dict["metadata"] = json.loads(device_dict["metadata"])
+        return device_dict
+    return None
+
+
+def get_all_devices_metadata() -> List[Dict]:
+    """Получение метаданных всех устройств"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM devices")
+    devices = []
+    for device in cursor.fetchall():
+        device_dict = dict(device)
+        if device_dict.get("metadata"):
+            device_dict["metadata"] = json.loads(device_dict["metadata"])
+        devices.append(device_dict)
+    conn.close()
+
+    return devices
 
 
 def create_lab(title: str, description: str, content: Dict, created_by: int) -> int:
