@@ -18,6 +18,9 @@ class Logger:
     def error(self, message: str): self._add("error", message)
     def success(self, message: str): self._add("success", message)
 
+    def debug(self, message: str): self._add(
+        "info", message)  # Добавляем метод debug
+
     def _add(self, icon: str, message: str):
         timestamp = datetime.now().strftime("%H:%M:%S")
         icon_html = f'<img src=":/icon/icons/{icon}.png" width="16" height="16" style="vertical-align:middle;">'

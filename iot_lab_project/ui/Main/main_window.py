@@ -191,50 +191,45 @@ class MainWindow(QMainWindow):
 
     def _open_connection_settings(self):
         """Открытие диалога настроек подключения"""
-        from PySide6.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QLineEdit, QPushButton, QHBoxLayout
+        from ui.dialogs.connection_dialog import ConnectionDialog
+        dialog = ConnectionDialog(self)
+        if dialog.exec() == QDialog.Accepted:
+            # Перезагружаем настройки подключения
+            from db.connection_db import HAConnectionDB
+            db = HAConnectionDB()
+            api_connections = db.get_all_custom_api_connections()
 
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Настройки подключения к серверу")
-        dialog.setMinimumWidth(400)
+            if api_connections:
+                # Берем первое подключение из списка
+                conn = api_connections[0]
+                url = conn["url"]
+                api_key = conn["api_key"]
 
-        layout = QVBoxLayout(dialog)
+                # Настраиваем API клиент
+                api_client.configure(url, api_key)
 
-        form = QFormLayout()
+                # Проверяем соединение
+                if api_client.check_connection():
+                    self._update_connection_status(success=True)
+                    self.logger.success(f"Подключено к {url}")
 
-        # Загружаем текущие настройки
-        settings = QSettings("IoTLab", "Connection")
-        url = settings.value("url", "")
-        api_key = settings.value("api_key", "")
+                    # Если пользователь авторизован, перезапускаем WebSocket
+                    if self.user_data and api_client.token:
+                        # Закрываем текущее соединение
+                        if self.ws_client:
+                            try:
+                                self.ws_client.close()
+                            except:
+                                pass
+                            self.ws_client = None
 
-        url_edit = QLineEdit(url)
-        url_edit.setPlaceholderText("http://localhost:8000")
-        form.addRow("URL сервера:", url_edit)
-
-        api_key_edit = QLineEdit(api_key)
-        api_key_edit.setPlaceholderText("API ключ")
-        form.addRow("API ключ:", api_key_edit)
-
-        layout.addLayout(form)
-
-        buttons = QHBoxLayout()
-
-        save_btn = QPushButton("Сохранить")
-        save_btn.clicked.connect(lambda: self._save_connection(
-            dialog, url_edit.text(), api_key_edit.text()))
-        buttons.addWidget(save_btn)
-
-        test_btn = QPushButton("Проверить соединение")
-        test_btn.clicked.connect(lambda: self._test_connection(
-            url_edit.text(), api_key_edit.text()))
-        buttons.addWidget(test_btn)
-
-        cancel_btn = QPushButton("Отмена")
-        cancel_btn.clicked.connect(dialog.reject)
-        buttons.addWidget(cancel_btn)
-
-        layout.addLayout(buttons)
-
-        dialog.exec()
+                        # Запускаем новое соединение
+                        self._start_websocket()
+                else:
+                    self._update_connection_status(disconnected=True)
+                    self.logger.error(f"Ошибка подключения к {url}")
+                    QMessageBox.warning(
+                        self, "Ошибка", "Не удалось подключиться к серверу")
 
     def _save_connection(self, dialog, url: str, api_key: str):
         """Сохранение настроек подключения"""
@@ -697,6 +692,7 @@ class MainWindow(QMainWindow):
         # Сбрасываем токен в API клиенте
         api_client.set_token("")
 
+        # Показываем диалог входа
         dialog = LoginDialog()
         if dialog.exec() == QDialog.Accepted:
             self.user_data = dialog.user_data
@@ -715,6 +711,9 @@ class MainWindow(QMainWindow):
             self.logger = get_logger()
             self._refresh_logs()
             self.devices_panel.clear_devices()
+        else:
+            # Если пользователь отменил вход, закрываем приложение
+            self.close()
 
     def _show_error(self, error: str):
         """Отображение ошибки"""
@@ -758,4 +757,5 @@ class MainWindow(QMainWindow):
                     if worker.isRunning():
                         worker.terminate()
 
+        # Принимаем событие закрытия
         event.accept()

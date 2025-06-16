@@ -135,3 +135,11 @@ class BookingManager(QObject):
             if not worker.isRunning():
                 worker.deleteLater()
                 self._workers.remove(worker)
+            else:
+                # Если поток все еще работает, пытаемся его остановить
+                worker.quit()
+                worker.wait(1000)  # Ждем до 1 секунды
+                if worker.isRunning():
+                    worker.terminate()
+                worker.deleteLater()
+                self._workers.remove(worker)

@@ -1,11 +1,13 @@
 from PySide6.QtWidgets import (
     QDialog, QLineEdit, QPushButton, QVBoxLayout, QFormLayout,
-    QHBoxLayout, QToolButton, QMessageBox, QWidget, QCheckBox
+    QHBoxLayout, QToolButton, QMessageBox, QWidget, QApplication
 )
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import QSize, QSettings
+from PySide6.QtCore import QSize, Qt
 from core.api import api_client
-from core.api.api_worker import LoginWorker, RegisterWorker
+from core.logger import get_logger
+
+logger = get_logger()
 
 
 class LoginDialog(QDialog):
@@ -16,13 +18,10 @@ class LoginDialog(QDialog):
         self.user_data = None
         self.token = None
         self.is_register_mode = False
-        self.is_guest_mode = False
-        self._current_worker = None
+        logger.info("Инициализация LoginDialog")
 
         self._build_ui()
         self._set_register_mode(False)
-        self._load_connection_settings()
-        self._auto_connect()
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
@@ -30,6 +29,7 @@ class LoginDialog(QDialog):
         self.form.setSpacing(12)
 
         self.login_edit = QLineEdit()
+        self.login_edit.setPlaceholderText("Введите логин")
         self.form.addRow("Логин:", self.login_edit)
 
         self.password_edit, self.toggle_password_btn = self._create_password_field(
@@ -44,17 +44,18 @@ class LoginDialog(QDialog):
         self.form.addRow("Повтор пароля:", self.row_repeat)
 
         self.lastname_edit = QLineEdit()
+        self.lastname_edit.setPlaceholderText("Введите фамилию")
         self.form.addRow("Фамилия:", self.lastname_edit)
+
         self.firstname_edit = QLineEdit()
+        self.firstname_edit.setPlaceholderText("Введите имя")
         self.form.addRow("Имя:", self.firstname_edit)
+
         self.middlename_edit = QLineEdit()
+        self.middlename_edit.setPlaceholderText("Введите отчество")
         self.form.addRow("Отчество:", self.middlename_edit)
 
         layout.addLayout(self.form)
-
-        self.remember_cb = QCheckBox("Запомнить меня")
-        self.remember_cb.setChecked(True)
-        layout.addWidget(self.remember_cb)
 
         buttons_layout = QVBoxLayout()
         self.submit_btn = QPushButton("Войти")
@@ -65,16 +66,10 @@ class LoginDialog(QDialog):
         self.toggle_mode_btn.clicked.connect(self._toggle_mode)
         buttons_layout.addWidget(self.toggle_mode_btn)
 
-        self.guest_btn = QPushButton("Войти как гость")
-        self.guest_btn.clicked.connect(self._login_as_guest)
-        buttons_layout.addWidget(self.guest_btn)
-
-        self.connection_btn = QPushButton("Настройки подключения")
-        self.connection_btn.clicked.connect(self._open_connection_settings)
-        buttons_layout.addWidget(self.connection_btn)
-
         layout.addLayout(buttons_layout)
         layout.addStretch()
+
+        logger.info("UI LoginDialog построен")
 
     def _create_password_field(self, placeholder=""):
         edit = QLineEdit()
@@ -105,67 +100,71 @@ class LoginDialog(QDialog):
         button.setIcon(icon)
 
     def _toggle_mode(self):
+        logger.info(
+            f"Переключение режима на {'регистрацию' if not self.is_register_mode else 'вход'}")
         self._set_register_mode(not self.is_register_mode)
         self.toggle_mode_btn.clearFocus()
         self.toggle_mode_btn.setDown(False)
 
     def _set_register_mode(self, register: bool):
         self.is_register_mode = register
-        self.form.labelForField(self.row_repeat).setVisible(register)
-        self.row_repeat.setVisible(register)
-        self.form.labelForField(self.lastname_edit).setVisible(register)
-        self.lastname_edit.setVisible(register)
-        self.form.labelForField(self.firstname_edit).setVisible(register)
-        self.firstname_edit.setVisible(register)
-        self.form.labelForField(self.middlename_edit).setVisible(register)
-        self.middlename_edit.setVisible(register)
+        logger.info(
+            f"Установка режима: {'регистрация' if register else 'вход'}")
+
+        # Сначала скрываем все дополнительные поля
+        for field in [self.row_repeat, self.lastname_edit, self.firstname_edit, self.middlename_edit]:
+            field.setVisible(register)
+            if hasattr(self.form, "labelForField"):
+                label = self.form.labelForField(field)
+                if label:
+                    label.setVisible(register)
+
+        # Устанавливаем текст кнопок
         self.submit_btn.setText("Зарегистрироваться" if register else "Войти")
         self.toggle_mode_btn.setText(
             "Уже есть аккаунт" if register else "У меня нет аккаунта")
-        self.setFixedSize(400, 460 if register else 300)
+
+        # Изменяем размер окна
+        self.setFixedSize(400, 460 if register else 220)
+
+        # Обновляем геометрию окна
         self.adjustSize()
         self.updateGeometry()
 
-    def _load_connection_settings(self):
-        settings = QSettings("IoTLab", "Connection")
-        url = settings.value("url", "")
-        api_key = settings.value("api_key", "")
-        if url and api_key:
-            api_client.configure(url, api_key)
-            return True
-        return False
-
-    def _auto_connect(self):
-        if api_client.check_connection():
-            self.setWindowTitle("Вход / Регистрация - Подключено")
-        else:
-            self.setWindowTitle("Вход / Регистрация - Нет подключения")
-            QMessageBox.warning(self, "Ошибка подключения",
-                                "Не удалось подключиться к серверу. Проверьте настройки подключения.")
-
-    def _open_connection_settings(self):
-        from ui.dialogs.connection_dialog import ConnectionDialog
-        dialog = ConnectionDialog(self)
-        dialog.exec()
-        self._load_connection_settings()
-        self._auto_connect()
-
     def _on_submit(self):
+        # Отключаем кнопку, чтобы предотвратить повторные нажатия
+        self.submit_btn.setEnabled(False)
+        QApplication.processEvents()  # Обрабатываем события, чтобы UI обновился
+
         if not api_client.is_connected():
+            logger.warning("Попытка входа без подключения к серверу")
             QMessageBox.warning(self, "Ошибка подключения",
                                 "Нет подключения к серверу. Проверьте настройки подключения.")
+            self.submit_btn.setEnabled(True)
             return
+
         login = self.login_edit.text().strip()
         password = self.password_edit.text()
+
         if self.is_register_mode:
+            logger.info(f"Попытка регистрации пользователя: {login}")
             repeat = self.repeat_edit.text()
             last = self.lastname_edit.text().strip()
             first = self.firstname_edit.text().strip()
             middle = self.middlename_edit.text().strip()
+
             if not login or not password or not repeat or not last or not first or not middle:
-                return QMessageBox.warning(self, "Ошибка", "Заполните все поля")
+                logger.warning("Не все поля заполнены при регистрации")
+                QMessageBox.warning(self, "Ошибка", "Заполните все поля")
+                self.submit_btn.setEnabled(True)
+                return
+
             if password != repeat:
-                return QMessageBox.warning(self, "Ошибка", "Пароли не совпадают")
+                logger.warning("Пароли не совпадают при регистрации")
+                QMessageBox.warning(self, "Ошибка", "Пароли не совпадают")
+                self.submit_btn.setEnabled(True)
+                return
+
             user_data = {
                 "login": login,
                 "password": password,
@@ -174,64 +173,58 @@ class LoginDialog(QDialog):
                 "middle_name": middle,
                 "role": "student"
             }
-            self._current_worker = RegisterWorker(api_client, user_data)
-            self._current_worker.result_ready.connect(
-                self._on_register_success)
-            self._current_worker.error_occurred.connect(self._show_error)
-            self._current_worker.finished.connect(self._clear_worker)
-            self._current_worker.start()
+
+            # Прямой вызов API для регистрации
+            try:
+                logger.info("Отправка запроса на регистрацию")
+                result = api_client.register(user_data)
+                if result:
+                    logger.success(
+                        f"Пользователь {login} успешно зарегистрирован")
+                    QMessageBox.information(
+                        self, "Успех", "Вы успешно зарегистрированы! Теперь вы можете войти.")
+                    self._set_register_mode(False)
+                    self.login_edit.setText(login)
+                    self.password_edit.clear()
+                else:
+                    logger.error(f"Ошибка регистрации пользователя {login}")
+                    QMessageBox.warning(
+                        self, "Ошибка", "Не удалось зарегистрироваться")
+            except Exception as e:
+                logger.error(f"Исключение при регистрации: {str(e)}")
+                QMessageBox.critical(self, "Ошибка", str(e))
+
+            self.submit_btn.setEnabled(True)
         else:
+            logger.info(f"Попытка входа пользователя: {login}")
             if not login or not password:
-                return QMessageBox.warning(self, "Ошибка", "Введите логин и пароль")
-            self._current_worker = LoginWorker(api_client, login, password)
-            self._current_worker.result_ready.connect(self._on_login_success)
-            self._current_worker.error_occurred.connect(self._show_error)
-            self._current_worker.finished.connect(self._clear_worker)
-            self._current_worker.start()
+                logger.warning("Не заполнены логин или пароль при входе")
+                QMessageBox.warning(self, "Ошибка", "Введите логин и пароль")
+                self.submit_btn.setEnabled(True)
+                return
 
-    def _clear_worker(self):
-        self._current_worker = None
+            # Прямой вызов API для входа
+            try:
+                logger.info("Отправка запроса на вход")
+                result = api_client.login(login, password)
+                if result:
+                    logger.success(
+                        f"Пользователь {login} успешно вошел в систему")
+                    self.user_data = result.get("user")
+                    self.token = result.get("access_token")
+                    api_client.set_token(self.token)
+                    self.accept()
+                else:
+                    logger.warning(
+                        f"Неверный логин или пароль для пользователя {login}")
+                    QMessageBox.warning(
+                        self, "Ошибка", "Неверный логин или пароль")
+                    self.submit_btn.setEnabled(True)
+            except Exception as e:
+                logger.error(f"Исключение при входе: {str(e)}")
+                QMessageBox.critical(self, "Ошибка", str(e))
+                self.submit_btn.setEnabled(True)
 
-    def _on_login_success(self, result):
-        if not result:
-            QMessageBox.warning(self, "Ошибка", "Неверный логин или пароль")
-            return
-        self.user_data = result.get("user")
-        self.token = result.get("access_token")
-        api_client.set_token(self.token)
-        if self.remember_cb.isChecked():
-            settings = QSettings("IoTLab", "Auth")
-            settings.setValue("token", self.token)
-            settings.setValue("user_id", self.user_data.get("id"))
-        self.accept()
-
-    def _on_register_success(self, user):
-        if not user:
-            QMessageBox.warning(
-                self, "Ошибка", "Не удалось зарегистрироваться")
-            return
-        QMessageBox.information(
-            self, "Успех", "Вы успешно зарегистрированы! Теперь вы можете войти.")
-        self._set_register_mode(False)
-        self.login_edit.setText(user.get("login", ""))
-        self.password_edit.clear()
-
-    def _login_as_guest(self):
-        if not api_client.is_connected():
-            QMessageBox.warning(self, "Ошибка подключения",
-                                "Нет подключения к серверу. Проверьте настройки подключения.")
-            return
-        self.user_data = {
-            "id": 0,
-            "login": "guest",
-            "role": "guest",
-            "last_name": "Гость",
-            "first_name": "",
-            "middle_name": ""
-        }
-        api_client.set_token("")
-        self.is_guest_mode = True
-        self.accept()
-
-    def _show_error(self, error):
-        QMessageBox.critical(self, "Ошибка", error)
+    def closeEvent(self, event):
+        logger.info("Закрытие диалога LoginDialog")
+        event.accept()

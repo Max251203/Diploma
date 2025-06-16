@@ -1,9 +1,12 @@
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QFile, QTextStream, QSettings
+from PySide6.QtCore import QFile, QTextStream
 from ui.dialogs.login_dialog import LoginDialog
+from ui.dialogs.server_connection_dialog import ServerConnectionDialog
 from ui.Main.main_window import MainWindow
 from core.api import api_client
 from core.logger import get_logger
+from db.connection_db import HAConnectionDB
+import sys
 
 logger = get_logger()
 
@@ -16,76 +19,68 @@ def load_stylesheet():
 
 
 def load_connection_settings():
-    """Загрузка настроек подключения"""
-    settings = QSettings("IoTLab", "Connection")
-    url = settings.value("url", "")
-    api_key = settings.value("api_key", "")
+    """Загрузка настроек подключения из базы данных"""
+    db = HAConnectionDB()
+    api_connections = db.get_all_custom_api_connections()
 
-    if url and api_key:
+    if api_connections:
+        # Берем первое подключение из списка
+        conn = api_connections[0]
+        url = conn["url"]
+        api_key = conn["api_key"]
+
         # Настраиваем API клиент
         api_client.configure(url, api_key)
         return True
     return False
 
 
-def load_saved_auth():
-    """Загрузка сохраненных данных аутентификации"""
-    settings = QSettings("IoTLab", "Auth")
-    token = settings.value("token", "")
-    user_id = settings.value("user_id", 0)
-
-    if token and user_id and load_connection_settings():
-        # Устанавливаем токен
-        api_client.set_token(token)
-
-        # Проверяем соединение
-        if api_client.check_connection():
-            # Получаем информацию о пользователе
-            user = api_client.get_current_user()
-            if user:
-                return user
-
-    return None
-
-
 if __name__ == "__main__":
-    app = QApplication([])
+    logger.info("Запуск приложения")
+    app = QApplication(sys.argv)
     app.setStyleSheet(load_stylesheet())
 
-    # Загружаем настройки подключения в любом случае
-    load_connection_settings()
+    # Инициализируем базу данных
+    db = HAConnectionDB()
 
-    # Пытаемся загрузить сохраненные данные аутентификации
-    user_data = load_saved_auth()
+    # Загружаем настройки подключения
+    has_connection = load_connection_settings()
 
-    if user_data:
-        # Если есть сохраненные данные, сразу открываем главное окно
+    # Показываем диалог подключения к серверу
+    logger.info("Отображение диалога подключения к серверу")
+    connection_dialog = ServerConnectionDialog()
+    if connection_dialog.exec() != ServerConnectionDialog.Accepted:
+        # Если пользователь отменил подключение, завершаем приложение
         logger.info(
-            f"Автоматический вход пользователя: {user_data.get('login')}")
-        window = MainWindow(user_data=user_data)
+            "Пользователь отменил подключение к серверу, завершение приложения")
+        sys.exit(0)
+
+    # Проверяем соединение с сервером
+    if not api_client.check_connection():
+        logger.error("Не удалось подключиться к серверу")
+        sys.exit(0)
+
+    # Если подключение успешно, показываем диалог входа
+    logger.info("Отображение диалога входа")
+    login_dialog = LoginDialog()
+    if login_dialog.exec() == LoginDialog.Accepted:
+        user = login_dialog.user_data
+        token = login_dialog.token
+
+        logger.info(f"Вход пользователя: {user.get('login')}")
+
+        # Устанавливаем токен в API клиенте
+        if token:
+            api_client.set_token(token)
+
+        logger.info("Создание и отображение главного окна")
+        window = MainWindow(user_data=user)
         window.show()
+
+        # Запускаем главный цикл приложения
+        logger.info("Запуск главного цикла приложения")
+        sys.exit(app.exec())
     else:
-        # Иначе показываем диалог входа
-        login = LoginDialog()
-        if login.exec() == LoginDialog.Accepted:
-            user = login.user_data
-            token = login.token
-            is_guest = login.is_guest_mode
-
-            if is_guest:
-                logger.info("Вход в режиме гостя")
-            else:
-                logger.info(f"Вход пользователя: {user.get('login')}")
-
-            # Устанавливаем токен в API клиенте, если не гостевой режим
-            if token and not is_guest:
-                api_client.set_token(token)
-
-            window = MainWindow(user_data=user)
-            window.show()
-        else:
-            # Если пользователь отменил вход, завершаем приложение
-            app.quit()
-            exit(0)
-
-    app.exec()
+        # Если пользователь отменил вход, завершаем приложение
+        logger.info("Пользователь отменил вход, завершение приложения")
+        sys.exit(0)
